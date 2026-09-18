@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ward Parishad Dashboard | Ward No. 44</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+  <div id="loginOverlay" class="login-overlay"><div class="login-card"><img src="assets/inc-hand-logo.png" alt=""><h2>Parishad Dashboard Login</h2><p>Authorized dashboard access only.</p><small class="login-msg">Temporary demo: this version stores data only in the current browser.</small><input id="loginEmail" type="email" placeholder="Email"><input id="loginPassword" type="password" placeholder="Password"><button id="loginBtn" class="primary-btn">Login</button><div id="loginMsg" class="login-msg"></div></div></div>
+  <header class="site-header">
+    <div class="brand-wrap">
+      <img class="logo" src="assets/inc-hand-logo.png" alt="INC hand symbol">
+      <div class="brand-title">
+        <div class="main-title">WARD PARISHAD DASHBOARD</div>
+        <div class="sub-title">Ward No. 44 <span>|</span> Indra Colony, Pali</div>
+      </div>
+      <div class="parishad-head">
+        <small>Ward Parishad</small>
+        <strong>MOINUDDIN SHAIKH</strong>
+        <span>Indian National Congress (INC)</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="index.html">⌂ <span>Public Portal</span></a>
+      <a class="active" href="dashboard.html">▦ <span>Dashboard</span></a>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-banner">
+      <div>
+        <div class="eyebrow">PRIVATE PARISHAD AREA</div>
+        <h1>Ward Complaint Dashboard</h1>
+        <p>Manage citizen complaints, review photo/video evidence and update resolution status.</p>
+      </div>
+      <a class="back-btn" href="index.html">← Public Portal</a>
+    </div>
+
+    <section class="dash-stats">
+      <div><b id="dashTotal">0</b><span>Total Complaints</span></div>
+      <div><b id="dashOpen">0</b><span>Open / In Progress</span></div>
+      <div><b id="dashSolved">0</b><span>Solved</span></div>
+    </section>
+
+    <section class="dashboard-tools">
+      <div class="filters">
+        <button class="filter active" data-filter="All">All</button>
+        <button class="filter" data-filter="Registered">Registered</button>
+        <button class="filter" data-filter="In Progress">In Progress</button>
+        <button class="filter" data-filter="Solved">Solved</button>
+      </div>
+      <button id="logoutBtn" class="outline-btn">Logout</button>
+    </section>
+
+    <section id="dashboardList" class="dashboard-list"></section>
+  </main>
+
+  <footer>
+    <div><img src="assets/inc-hand-logo.png" alt=""> <span><b>Ward Parishad Dashboard</b><small>Moinuddin Shaikh · Ward No. 44 · Indra Colony, Pali</small></span></div>
+    <a href="index.html">← Back to Public Portal</a>
+  </footer>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

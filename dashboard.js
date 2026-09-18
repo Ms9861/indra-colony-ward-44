@@ -1,0 +1,16 @@
+const STORAGE_KEY='ward44_complaints_demo_v1';
+const $=id=>document.getElementById(id);
+let activeFilter='All';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const fmt=t=>t?new Date(t).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
+function getComplaints(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return[]}}
+function save(v){localStorage.setItem(STORAGE_KEY,JSON.stringify(v))}
+function updateStatus(id,status){const all=getComplaints();const c=all.find(x=>x.id===id);if(!c)return;c.status=status;c.updated_at=new Date().toISOString();if(status==='Solved'&&!c.solved_at)c.solved_at=new Date().toISOString();if(status!=='Solved')c.solved_at=null;save(all);refresh()}
+function login(){const e=$('loginEmail').value.trim(),p=$('loginPassword').value;if(!e||!p){$('loginMsg').textContent='Enter email and password.';return}localStorage.setItem('ward44_demo_admin','1');showApp()}
+function showApp(){if(localStorage.getItem('ward44_demo_admin')==='1'){$('loginOverlay')?.classList.add('hidden');refresh()}else $('loginOverlay')?.classList.remove('hidden')}
+function refresh(){const all=getComplaints(),d=activeFilter==='All'?all:all.filter(x=>x.status===activeFilter);$('dashTotal').textContent=all.length;$('dashOpen').textContent=all.filter(x=>x.status!=='Solved').length;$('dashSolved').textContent=all.filter(x=>x.status==='Solved').length;$('dashboardList').innerHTML=d.length?d.map(c=>`<article class="dash-item"><div><div class="complaint-id">${esc(c.complaint_no)}</div><h4>${esc(c.category)}</h4><p><b>Resident:</b> ${esc(c.name)} · ${esc(c.mobile)}<br><b>Location:</b> ${esc(c.location)}<br><b>Registration:</b> ${esc(fmt(c.registered_at))}<br><b>GPS:</b> ${c.latitude&&c.longitude?`${esc(c.latitude)}, ${esc(c.longitude)} (±${esc(c.gps_accuracy||'')} m) <a class="map-link" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open Map</a>`:'Not captured'}<br>${esc(c.description)}</p>${c.media_note?`<div class="video-meta">${esc(c.media_note)}</div>`:''}<div class="resolution-box"><div><b>Video Backup</b><small>Not configured yet. You can add Google Drive/Google Sheets storage later.</small></div></div></div><div class="status-control"><span class="badge ${c.status==='Solved'?'solved':c.status==='In Progress'?'progress':'registered'}">${esc(c.status)}</span><select onchange="updateStatus('${esc(c.id)}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select></div></article>`).join(''):'<div class="result">No complaints in this category. Remember: this temporary version shares data only within the same browser/device.</div>'}
+window.updateStatus=updateStatus;
+document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeFilter=b.dataset.filter;refresh()});
+$('loginBtn')?.addEventListener('click',login);
+$('logoutBtn')?.addEventListener('click',()=>{localStorage.removeItem('ward44_demo_admin');location.reload()});
+showApp();
