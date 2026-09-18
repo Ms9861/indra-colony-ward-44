@@ -1,229 +1,34 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Jan Seva Yojana | Ward No. 44 | Indra Colony, Pali</title>
-  <meta name="description" content="Citizen issue registration and complaint tracking portal for Ward No. 44, Indra Colony, Pali.">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jan Seva Yojana | Ward 44 | Indra Colony, Pali</title>
+<meta name="description" content="Ward 44 citizen issue registration portal">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand-wrap">
-      <img class="logo" src="inc-hand-logo.png" alt="INC hand symbol">
-      <div class="brand-title">
-        <div class="main-title">INDRA COLONY, PALI</div>
-        <div class="sub-title">Ward No. 44 <span>|</span> Jan Seva Yojana</div>
-      </div>
-      <div class="parishad-head">
-        <small>Ward Parishad</small>
-        <strong>MOINUDDIN SHAIKH</strong>
-        <span>Indian National Congress (INC)</span>
-      </div>
-    </div>
-    <nav class="nav">
-      <a class="active" href="#home">⌂ <span>Home</span></a>
-      <a href="#register">▣ <span>Register Issue</span></a>
-      <a href="#track">⌕ <span>Track Status</span></a>
-      
-    </nav>
-  </header>
-
-  <main>
-    <section id="home" class="hero">
-      <div class="hero-left">
-        <img src="inc-hand-logo.png" alt="" class="hero-logo">
-        <div>
-          <div class="hero-kicker">JAN SEVA YOJANA</div>
-          <h1>INDRA COLONY, PALI</h1>
-          <h2>Ward No. 44 <span>|</span> Citizen Issue Portal</h2>
-          <div class="hero-rule"></div>
-          <p>आपकी समस्या &nbsp; | &nbsp; हमारी जिम्मेदारी</p>
-        </div>
-      </div>
-      <div class="hero-quote">
-        <div class="quote-mark">“</div>
-        <div>
-          <div class="hindi">जन सेवा के लिए<br>समस्या दर्ज करें</div>
-          <div class="quote-by">Ward Parishad — Moinuddin Shaikh</div>
-          <small>Ward No. 44 · Indra Colony, Pali</small>
-        </div>
-      </div>
-    </section>
-
-    <section class="portal-grid">
-      <div class="card register-card" id="register">
-        <div class="card-head green-head">
-          <div class="head-icon">✎</div>
-          <div>
-            <h2>Register Your Issue</h2>
-            <p>Fill the form and submit your complaint to Ward Parishad.</p>
-          </div>
-        </div>
-
-        <form id="complaintForm">
-          <div class="field">
-            <label>Name <em>*</em></label>
-            <input name="name" required placeholder="Enter your full name">
-          </div>
-          <div class="field">
-            <label>Mobile No. <em>*</em></label>
-            <input name="mobile" required pattern="[0-9]{10}" inputmode="numeric" placeholder="Enter your mobile number">
-          </div>
-          <div class="field">
-            <label>Area / Location <em>*</em></label>
-            <input name="location" required placeholder="Enter area, street or landmark">
-            <div class="gps-row">
-              <button type="button" id="getGps" class="gps-btn">⌖ Use My GPS Location</button>
-              <span id="gpsStatus">GPS not captured</span>
-            </div>
-            <input type="hidden" name="latitude" id="latitude">
-            <input type="hidden" name="longitude" id="longitude">
-            <input type="hidden" name="gpsAccuracy" id="gpsAccuracy">
-          </div>
-          <div class="field">
-            <label>Issue Category <em>*</em></label>
-            <select name="category" required>
-              <option value="">Select issue category</option>
-              <option>Road / Pothole</option>
-              <option>Street Light</option>
-              <option>Water Supply</option>
-              <option>Drainage / Sewer</option>
-              <option>Garbage / Cleanliness</option>
-              <option>Public Park</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Describe Your Problem <em>*</em></label>
-            <textarea name="description" required rows="4" placeholder="Describe your problem in detail..."></textarea>
-          </div>
-
-          <div class="uploads">
-            <label class="upload-box">
-              <span class="upload-icon">▧</span>
-              <strong>Upload Image</strong>
-              <small>JPG, PNG · Max 5 MB each</small>
-              <input id="imageInput" type="file" accept="image/*" multiple hidden>
-              <span class="choose">Choose Files</span>
-              <span id="imageName" class="file-name">No files chosen</span>
-            </label>
-            <label class="upload-box">
-              <span class="upload-icon">▣</span>
-              <strong>Upload Video</strong>
-              <small>MP4, MOV · Max 20 MB</small>
-              <input id="videoInput" type="file" accept="video/*" hidden>
-              <span class="choose">Choose File</span>
-              <span id="videoName" class="file-name">No file chosen</span>
-            </label>
-          </div>
-
-          <div id="mediaPreview" class="media-preview"></div>
-          <button class="submit-btn" type="submit">➤ &nbsp; Submit Complaint</button>
-          <p class="form-note">Your submitted information is used for issue registration and follow-up.</p>
-        </form>
-
-        <div id="successBox" class="success hidden">
-          <div class="success-icon">✓</div>
-          <div>
-            <strong>Complaint Registered Successfully</strong>
-            <p>Your Problem will solve Within 3 to 7 Days.</p>
-            <small>Complaint ID: <b id="newId"></b></small>
-          </div>
-        </div>
-      </div>
-
-      <div class="middle-column">
-        <div class="card how-card">
-          <div class="section-title">⚙ <strong>How It Works?</strong></div>
-          <div class="steps">
-            <div class="step">
-              <div class="step-circle orange">▤</div>
-              <b>1. Register Issue</b>
-              <small>Fill the form & upload image/video</small>
-            </div>
-            <div class="arrow">→</div>
-            <div class="step">
-              <div class="step-circle green">◉</div>
-              <b>2. WhatsApp Alert</b>
-              <small>Issue details prepared for Ward Parishad</small>
-            </div>
-            <div class="arrow">→</div>
-            <div class="step">
-              <div class="step-circle darkgreen">⚙</div>
-              <b>3. Action Taken</b>
-              <small>Team reviews and works on the issue</small>
-            </div>
-            <div class="arrow">→</div>
-            <div class="step">
-              <div class="step-circle green">✓</div>
-              <b>4. Problem Solved</b>
-              <small>Status is updated for the resident</small>
-            </div>
-          </div>
-          <div class="promise"><span>◷</span><div><b>Your Problem will solve</b><strong>Within 3 to 7 Days.</strong></div></div>
-        </div>
-
-        <div class="card track-card" id="track">
-          <div class="section-title">⌕ <strong>Track Your Complaint</strong></div>
-          <p>Enter your complaint ID to check the current status.</p>
-          <div class="track-row">
-            <input id="trackId" placeholder="Enter Complaint ID (e.g. W44-2026-0001)">
-            <button id="trackBtn">Track</button>
-          </div>
-          <div id="trackResult"></div>
-        </div>
-
-        <div class="card status-card">
-          <div class="section-title">▣ <strong>Complaint Status</strong></div>
-          <div class="status-line">
-            <div><span class="status-dot orange">▤</span><b>Registered</b><small>Your complaint is received</small></div>
-            <i>→</i>
-            <div><span class="status-dot amber">◉</span><b>In Progress</b><small>Our team is working on it</small></div>
-            <i>→</i>
-            <div><span class="status-dot green">✓</span><b>Solved</b><small>Issue has been resolved</small></div>
-          </div>
-        </div>
-      </div>
-
-      <aside class="right-column">
-        <div class="card whatsapp-card">
-          <div class="wa-icon">◉</div>
-          <div>
-            <h3>Get Instant Update on WhatsApp</h3>
-            <p>After registration, complaint details can be shared with the Ward Parishad on WhatsApp.</p>
-          </div>
-          <button id="waChat" class="wa-btn">◉ &nbsp; Chat on WhatsApp <span>›</span></button>
-          <small class="wa-help">Configure the Ward WhatsApp number in <code>app.js</code>.</small>
-        </div>
-
-        <div class="card parishad-card">
-          <img src="inc-hand-logo.png" alt="INC hand symbol">
-          <div>
-            <small>Ward Parishad</small>
-            <h3>MOINUDDIN SHAIKH</h3>
-            <p>Ward No. 44, Indra Colony, Pali</p>
-            <b>Indian National Congress (INC)</b>
-          </div>
-          <div class="tricolor-line"><i></i><i></i><i></i></div>
-          <div class="mini-links"><span>♟ Seva</span><span>▥ Vikas</span><span>⌖ Pali</span></div>
-        </div>
-
-        <div class="card recent-card">
-          <div class="recent-head"><div>⚑ <strong>Recent Complaints</strong></div><button id="viewAll">View All</button></div>
-          <div id="recentList"></div>
-        </div>
-      </aside>
-    </section>
-
-  </main>
-
-  <footer>
-    <div><img src="inc-hand-logo.png" alt=""> <span><b>Jan Seva Yojana</b><small>Ward No. 44 · Indra Colony, Pali</small></span></div>
-    <span>Citizen Issue Registration Portal</span>
-    <a class="admin-link" href="dashboard.html">Parishad Dashboard ↗</a>
-  </footer>
-
-  <script type="module" src="app.js"></script>
-</body>
-</html>
+<header class="topbar"><div class="brand"><img src="assets/inc-hand-logo.png"><div><b>JAN SEVA YOJANA</b><span>Ward No. 44 · Indra Colony, Pali</span></div></div><nav><a href="#register">Register Issue</a><a href="#track">Track Status</a><a class="admin" href="dashboard.html">Parishad Dashboard</a></nav></header>
+<main>
+<section class="hero"><div><div class="eyebrow">WARD NO. 44</div><h1>Indra Colony Citizen<br><strong>Issue Portal</strong></h1><p>Register a local civic issue and track its status online.</p><div class="hero-actions"><a href="#register" class="btn primary">Register an Issue</a><a href="#track" class="btn ghost">Track Complaint</a></div></div><div class="hero-card"><span>Expected response</span><strong>3–7 Days</strong><small>Your complaint is registered with a unique Complaint ID.</small></div></section>
+<section class="layout" id="register">
+<div class="panel form-panel"><div class="panel-title"><span class="number">01</span><div><h2>Register Your Issue</h2><p>Please provide accurate details so the issue can be followed up.</p></div></div>
+<form id="complaintForm">
+<div class="grid2"><label>Full Name *<input name="name" required placeholder="Your name"></label><label>Mobile Number *<input name="mobile" required inputmode="numeric" pattern="[0-9]{10}" placeholder="10-digit mobile"></label></div>
+<label>Area / Location *<input name="location" required placeholder="Street, landmark or area"></label>
+<div class="gps"><button type="button" id="getGps">⌖ Capture GPS</button><span id="gpsStatus">Location not captured</span></div>
+<input type="hidden" name="latitude" id="latitude"><input type="hidden" name="longitude" id="longitude"><input type="hidden" name="gpsAccuracy" id="gpsAccuracy">
+<div class="grid2"><label>Issue Category *<select name="category" required><option value="">Select category</option><option>Road / Pothole</option><option>Street Light</option><option>Water Supply</option><option>Drainage / Sewer</option><option>Garbage / Cleanliness</option><option>Public Park</option><option>Other</option></select></label><label>Priority<select name="priority"><option>Normal</option><option>Urgent</option></select></label></div>
+<label>Describe the Problem *<textarea name="description" rows="5" required placeholder="Explain the issue clearly..."></textarea></label>
+<div class="media-note"><b>Photos / Videos</b><span>Media backup is temporarily disabled. We will add Google Drive backup later.</span></div>
+<button class="submit" id="submitBtn" type="submit">Submit Complaint <span>→</span></button><p class="privacy">Your complaint details are used only for registration and follow-up.</p>
+</form>
+<div id="successBox" class="success hidden"><div class="check">✓</div><div><b>Complaint Registered</b><strong id="newId"></strong><p>Your Problem will solve Within 3 to 7 Days.</p><button id="newComplaint" type="button">Register another issue</button></div></div>
+</div>
+<aside class="side"><div class="panel info"><h3>How it works</h3><div class="step"><b>1</b><div><strong>Register</strong><span>Submit the issue details.</span></div></div><div class="step"><b>2</b><div><strong>Complaint ID</strong><span>Keep your unique ID safe.</span></div></div><div class="step"><b>3</b><div><strong>Action</strong><span>Parishad updates the status.</span></div></div><div class="step"><b>4</b><div><strong>Track</strong><span>Check progress anytime.</span></div></div></div>
+<div class="panel contact"><span>WARD PARISHAD</span><h3>Moinuddin Shaikh</h3><p>Ward No. 44 · Indra Colony, Pali</p><a id="waChat" href="#">WhatsApp Contact →</a></div></aside>
+</section>
+<section class="panel track" id="track"><div class="panel-title"><span class="number">02</span><div><h2>Track Your Complaint</h2><p>Enter the Complaint ID you received after registration.</p></div></div><div class="track-form"><input id="trackId" placeholder="Example: W44-2026-0001"><button id="trackBtn">Check Status</button></div><div id="trackResult"></div></section>
+</main>
+<footer><span>Jan Seva Yojana · Ward No. 44 · Indra Colony, Pali</span><a href="dashboard.html">Parishad Dashboard</a></footer>
+<script src="app.js"></script>
+</body></html>
