@@ -1,4 +1,4 @@
-# Ward 44 Jan Seva Yojana — GitHub + Vercel (Temporary Demo Storage)
+# Ward 44 Jan Seva Yojana
 
 This version has **NO Supabase** and **NO external video backup**.
 
