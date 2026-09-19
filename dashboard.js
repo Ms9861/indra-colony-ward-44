@@ -1,16 +1,43 @@
-const STORAGE_KEY='ward44_complaints_demo_v1';
+const API_URL='https://script.google.com/macros/s/AKfycbzlzY7ESVKgJ_yjm2yKHorUM8szJYJdcZt0vBZBEMM7h8P_0X63RkPOPWncqx2XtZyT/exec';
+const ADMIN_PIN='4411'; // Must match ADMIN_PIN in your Apps Script.
 const $=id=>document.getElementById(id);
-let activeFilter='All';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const fmt=t=>t?new Date(t).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
-function getComplaints(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return[]}}
-function save(v){localStorage.setItem(STORAGE_KEY,JSON.stringify(v))}
-function updateStatus(id,status){const all=getComplaints();const c=all.find(x=>x.id===id);if(!c)return;c.status=status;c.updated_at=new Date().toISOString();if(status==='Solved'&&!c.solved_at)c.solved_at=new Date().toISOString();if(status!=='Solved')c.solved_at=null;save(all);refresh()}
-function login(){const e=$('loginEmail').value.trim(),p=$('loginPassword').value;if(!e||!p){$('loginMsg').textContent='Enter email and password.';return}localStorage.setItem('ward44_demo_admin','1');showApp()}
-function showApp(){if(localStorage.getItem('ward44_demo_admin')==='1'){$('loginOverlay')?.classList.add('hidden');refresh()}else $('loginOverlay')?.classList.remove('hidden')}
-function refresh(){const all=getComplaints(),d=activeFilter==='All'?all:all.filter(x=>x.status===activeFilter);$('dashTotal').textContent=all.length;$('dashOpen').textContent=all.filter(x=>x.status!=='Solved').length;$('dashSolved').textContent=all.filter(x=>x.status==='Solved').length;$('dashboardList').innerHTML=d.length?d.map(c=>`<article class="dash-item"><div><div class="complaint-id">${esc(c.complaint_no)}</div><h4>${esc(c.category)}</h4><p><b>Resident:</b> ${esc(c.name)} · ${esc(c.mobile)}<br><b>Location:</b> ${esc(c.location)}<br><b>Registration:</b> ${esc(fmt(c.registered_at))}<br><b>GPS:</b> ${c.latitude&&c.longitude?`${esc(c.latitude)}, ${esc(c.longitude)} (±${esc(c.gps_accuracy||'')} m) <a class="map-link" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open Map</a>`:'Not captured'}<br>${esc(c.description)}</p>${c.media_note?`<div class="video-meta">${esc(c.media_note)}</div>`:''}<div class="resolution-box"><div><b>Video Backup</b><small>Not configured yet. You can add Google Drive/Google Sheets storage later.</small></div></div></div><div class="status-control"><span class="badge ${c.status==='Solved'?'solved':c.status==='In Progress'?'progress':'registered'}">${esc(c.status)}</span><select onchange="updateStatus('${esc(c.id)}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select></div></article>`).join(''):'<div class="result">No complaints in this category. Remember: this temporary version shares data only within the same browser/device.</div>'}
-window.updateStatus=updateStatus;
-document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeFilter=b.dataset.filter;refresh()});
-$('loginBtn')?.addEventListener('click',login);
-$('logoutBtn')?.addEventListener('click',()=>{localStorage.removeItem('ward44_demo_admin');location.reload()});
-showApp();
+let filter='All';
+
+async function request(body){
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  const text=await r.text(); let j; try{j=JSON.parse(text)}catch{throw new Error('Invalid response from Google Apps Script')}
+  if(!j.ok) throw new Error(j.message||'Request failed'); return j;
+}
+function login(){
+  if($('loginPin').value===ADMIN_PIN){sessionStorage.setItem('ward44_login','1');$('loginOverlay').classList.add('hidden');$('dashboardContent').classList.remove('hidden');load();}
+  else $('loginError').textContent='Incorrect PIN. Please try again.';
+}
+$('loginBtn').onclick=login;$('loginPin').onkeydown=e=>{if(e.key==='Enter')login()};
+$('logoutBtn').onclick=e=>{e.preventDefault();sessionStorage.removeItem('ward44_login');location.reload()};
+
+document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;load()});
+$('refreshBtn').onclick=load;
+
+async function load(){
+  const list=$('dashboardList'); list.innerHTML='<div class="loading-note">Loading complaints…</div>';
+  let all=[];
+  try{const j=await request({action:'list',pin:ADMIN_PIN});all=j.complaints||[];}
+  catch(e){list.innerHTML='<div class="result">Unable to load complaints. Check that your Apps Script deployment is active and the Parishad PIN is correct.</div>';return}
+  const shown=filter==='All'?all:all.filter(x=>x.status===filter);
+  $('dashTotal').textContent=all.length;$('dashOpen').textContent=all.filter(x=>x.status!=='Solved').length;$('dashSolved').textContent=all.filter(x=>x.status==='Solved').length;
+  list.innerHTML=shown.length?shown.map(c=>{
+    const id=esc(c.complaintId||'');
+    const statusClass=c.status==='Solved'?'solved':c.status==='In Progress'?'progress':'registered';
+    const map=c.latitude&&c.longitude?`<a class="map" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open GPS location ↗</a>`:'';
+    return `<article class="dash-item"><div><div class="complaint-id">${id}</div><h4>${esc(c.category)}</h4><p><b>Resident:</b> ${esc(c.name)} · ${esc(c.mobile)}<br><b>Location:</b> ${esc(c.location)}<br><b>Registered:</b> ${fmt(c.registeredAt)}<br><b>Problem:</b> ${esc(c.description)}</p><div class="dash-meta">${map}${c.latitude&&c.longitude?' · GPS captured':''}</div></div><div class="status-control"><span class="badge ${statusClass}">${esc(c.status)}</span><select onchange="changeStatus('${id}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select></div></article>`;
+  }).join(''):'<div class="result">No complaints found for this filter.</div>';
+}
+
+window.changeStatus=async(id,status)=>{
+  try{const j=await request({action:'status',complaintId:id,status,pin:ADMIN_PIN});if(!j.ok)throw new Error(j.message||'Status update failed');await load();}
+  catch(e){alert(e.message||'Status could not be updated.');await load();}
+};
+
+if(sessionStorage.getItem('ward44_login')==='1'){ $('loginOverlay').classList.add('hidden');$('dashboardContent').classList.remove('hidden');load(); }
