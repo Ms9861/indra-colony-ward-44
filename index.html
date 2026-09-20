@@ -74,6 +74,18 @@
             <label>Area / Location <em>*</em></label>
             <input name="location" required placeholder="Enter area, street or landmark">
           </div>
+          <div class="gps-panel">
+            <div class="gps-copy">
+              <div class="gps-title">⌖ Current GPS Location</div>
+              <div id="gpsStatus" class="gps-status">Location not captured</div>
+            </div>
+            <button type="button" id="getGps" class="gps-btn">Use My Current Location</button>
+            <a id="gpsMapLink" class="gps-map-link hidden" target="_blank" rel="noopener">Open on Google Maps ↗</a>
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+            <input type="hidden" id="gpsAccuracy" name="gpsAccuracy">
+          </div>
+
           <div class="field">
             <label>Issue Category <em>*</em></label>
             <select name="category" required>
@@ -202,7 +214,7 @@
         </div>
 
         <div class="card recent-card">
-          <div class="recent-head"><div>⚑ <strong>Recent Complaints</strong></div><button id="viewAll">View All</button></div>
+          <div class="recent-head"><div>⚑ <strong>Recent Complaints</strong></div><button id="viewAll" type="button">Refresh</button></div>
           <div id="recentList"></div>
         </div>
       </aside>
