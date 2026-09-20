@@ -103,24 +103,37 @@
             <textarea name="description" required rows="4" placeholder="Describe your problem in detail..."></textarea>
           </div>
 
-          <div class="uploads">
-            <label class="upload-box">
+          <div class="uploads media-actions">
+            <div class="upload-box media-box">
               <span class="upload-icon">▧</span>
-              <strong>Upload Image</strong>
-              <small>JPG, PNG · Max 5 MB each</small>
-              <input id="imageInput" type="file" accept="image/*" multiple hidden>
-              <span class="choose">Choose Files</span>
-              <span id="imageName" class="file-name">No files chosen</span>
-            </label>
-            <label class="upload-box">
+              <strong>Photo / Image</strong>
+              <small>Take a photo with camera or choose from phone gallery.</small>
+              <div class="media-buttons">
+                <label class="choose camera-btn">📷 Take Photo
+                  <input id="imageCameraInput" type="file" accept="image/*" capture="environment" hidden>
+                </label>
+                <label class="choose">🖼 Upload Photo
+                  <input id="imageInput" type="file" accept="image/*" multiple hidden>
+                </label>
+              </div>
+              <span id="imageName" class="file-name">No photo selected</span>
+            </div>
+            <div class="upload-box media-box">
               <span class="upload-icon">▣</span>
-              <strong>Upload Video</strong>
-              <small>MP4, MOV · Max 20 MB</small>
-              <input id="videoInput" type="file" accept="video/*" hidden>
-              <span class="choose">Choose File</span>
-              <span id="videoName" class="file-name">No file chosen</span>
-            </label>
+              <strong>Video</strong>
+              <small>Record a video with camera or choose one from your phone.</small>
+              <div class="media-buttons">
+                <label class="choose camera-btn">🎥 Record Video
+                  <input id="videoCameraInput" type="file" accept="video/*" capture="environment" hidden>
+                </label>
+                <label class="choose">🎬 Upload Video
+                  <input id="videoInput" type="file" accept="video/*" hidden>
+                </label>
+              </div>
+              <span id="videoName" class="file-name">No video selected</span>
+            </div>
           </div>
+          <div class="media-note">On mobile, the camera buttons open the device camera. Upload buttons open your existing photos/videos. Media is previewed here; online backup/storage will be added later.</div>
 
           <div id="mediaPreview" class="media-preview"></div>
           <button class="submit-btn" type="submit">➤ &nbsp; Submit Complaint</button>
