@@ -1,4 +1,4 @@
-const API_URL='https://script.google.com/macros/s/AKfycbwOBIZ5LoTCMbiO09_HPM5W74H-9fQ_QtrBNlhWKXdksRxgNkG3NHeXhvcJvXCpHFr7EQ/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbyQO1G0LfSmf0BOMYXuzLJ6Ipaf1cA3x-6OE4xiOUmBvdJwi9OnJsR_wbadsr7nzpVqSQ/exec';
 const ADMIN_PIN='2580'; // Must match ADMIN_PIN in your Apps Script.
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
