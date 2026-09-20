@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbwOBIZ5LoTCMbiO09_HPM5W74H-9fQ_QtrBNlhWKXdksRxgNkG3NHeXhvcJvXCpHFr7EQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyQO1G0LfSmf0BOMYXuzLJ6Ipaf1cA3x-6OE4xiOUmBvdJwi9OnJsR_wbadsr7nzpVqSQ/exec';
 const WARD_WHATSAPP = '917240610313'; // Replace with the Ward Parishad WhatsApp number.
 let imageFiles = [], videoFile = null;
 
@@ -39,8 +39,18 @@ function showFiles(){
   if(videoFile){ const u=URL.createObjectURL(videoFile); box.innerHTML += `<video src="${u}" controls></video>`; }
 }
 
-$('imageInput')?.addEventListener('change', e => { imageFiles=[...e.target.files]; showFiles(); });
-$('videoInput')?.addEventListener('change', e => { videoFile=e.target.files[0]||null; showFiles(); });
+function setImageFiles(files){
+  imageFiles=[...files];
+  showFiles();
+}
+function setVideoFile(file){
+  videoFile=file||null;
+  showFiles();
+}
+$('imageInput')?.addEventListener('change', e => setImageFiles(e.target.files));
+$('imageCameraInput')?.addEventListener('change', e => setImageFiles(e.target.files));
+$('videoInput')?.addEventListener('change', e => setVideoFile(e.target.files[0]));
+$('videoCameraInput')?.addEventListener('change', e => setVideoFile(e.target.files[0]));
 
 function captureGPS(){
   const s = $('gpsStatus');
