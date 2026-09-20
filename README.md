@@ -1,49 +1,22 @@
-# Ward 44 Jan Seva Yojana
+# Ward 44 Jan Seva Yojana — 
 
-This version has **NO Supabase** and **NO external video backup**.
+This build restores the earlier Ward 44 public portal visual design while keeping the Google Apps Script + Google Sheets backend.
 
-It is ready to upload to GitHub and deploy to Vercel as a static website.
+## Files
+- `index.html` — public portal
+- `dashboard.html` — separate Parishad dashboard with PIN login
+- `app.js` — public portal logic + Google Sheets API connection
+- `dashboard.js` — Parishad dashboard logic + status updates
+- `style.css` — previous UI styling
+- `assets/inc-hand-logo.png` — portal logo
 
-## Included
-- Public complaint portal
-- Separate Parishad dashboard
-- Complaint IDs
-- GPS capture
-- Complaint tracking
-- Registered → In Progress → Solved
-- Google Maps GPS link
-- WhatsApp pre-filled message support
-- Responsive/mobile UI
-- Existing Ward 44 logo
+## Google Apps Script
+The current Apps Script URL is already configured in `app.js` and `dashboard.js`.
 
-## Temporary storage limitation
-For now, complaint records are stored in the browser's `localStorage`.
-This means:
-- Data is NOT shared between different phones/computers.
-- Clearing browser data removes the demo complaints.
-- Uploaded images/videos are only previewed and are NOT backed up online.
-- There is NO video storage yet.
+The dashboard PIN in this build is `4411`. It must match the `ADMIN_PIN` in Apps Script.
 
-This is intentional for the current stage. Later, the same frontend can be connected to Google Sheets + Google Drive through Google Apps Script without redesigning the portal.
+## Media
+Image/video selectors remain in the previous UI for the design, but media backup is intentionally not sent to Google Drive yet. The selected files are only previewed in the browser until a future storage plan is added.
 
 ## Deploy
-1. Extract this ZIP.
-2. Create a GitHub repository.
-3. Upload the extracted project files (not the ZIP itself).
-4. In Vercel, import that GitHub repository.
-5. Deploy with the default static settings.
-
-## Dashboard
-Open `/dashboard` or `/dashboard.html`.
-The current demo login accepts any non-empty email and password and stores a browser-only session. This is NOT production security.
-
-## WhatsApp
-Edit `app.js` and replace `91XXXXXXXXXX` with the real WhatsApp number in international format, without `+` or spaces.
-
-## Next storage upgrade
-When ready, connect:
-- Google Sheets for complaint records
-- Google Drive for photos/videos
-- Google Apps Script as the backend
-
-No Supabase is required.
+Upload the contents of this folder to GitHub. Vercel can import the GitHub repository and deploy the static site.
