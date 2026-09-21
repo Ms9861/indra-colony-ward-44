@@ -5,11 +5,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Jan Seva Portal | Ward No. 44 | Indra Colony, Pali</title>
+  <title>Jan Seva Yojana | Ward No. 44 | Indra Colony, Pali</title>
   <meta name="description" content="Citizen issue registration and complaint tracking portal for Ward No. 44, Indra Colony, Pali.">
-  <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="inc-favicon.png">
   <link rel="apple-touch-icon" href="inc-favicon.png">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
@@ -17,7 +18,7 @@
       <img class="logo" src="inc-hand-logo.png" alt="INC hand symbol">
       <div class="brand-title">
         <div class="main-title">INDRA COLONY, PALI</div>
-        <div class="sub-title">Ward No. 44 <span>|</span> Jan Seva Portal</div>
+        <div class="sub-title">Ward No. 44 <span>|</span> Jan Seva Yojana</div>
       </div>
       <div class="parishad-head">
         <small>Ward Parishad</small>
@@ -36,9 +37,9 @@
   <main>
     <section id="home" class="hero">
       <div class="hero-left">
-        <img src="inc-hand-logo.png" alt="" class="hero-logo">
+        <img src="assets/inc-hand-logo.png" alt="" class="hero-logo">
         <div>
-          <div class="hero-kicker">JAN SEVA PORTAL</div>
+          <div class="hero-kicker">JAN SEVA YOJANA</div>
           <h1>INDRA COLONY, PALI</h1>
           <h2>Ward No. 44 <span>|</span> Citizen Issue Portal</h2>
           <div class="hero-rule"></div>
@@ -146,7 +147,7 @@
           <div>
             <strong>Complaint Registered Successfully</strong>
             <p>Your Problem will solve Within 3 to 7 Days.</p>
-            <small>Complaint ID: <b id="newId"></b></small>
+            <small>Complaint ID: <b id="newId"></b></small><button id="retryMediaBtn" type="button" class="retry-media-btn hidden">↻ Retry Media Upload</button>
           </div>
         </div>
       </div>
@@ -245,7 +246,7 @@
   <div id="welcomeModal" class="welcome-modal hidden" aria-hidden="true">
     <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <button id="closeWelcome" class="welcome-close" type="button" aria-label="Close">✕</button>
-      <div class="welcome-badge">WARD 44 · JAN SEVA PORTAL</div>
+      <div class="welcome-badge">WARD 44 · JAN SEVA YOJANA</div>
       <div class="welcome-icon">🤝</div>
       <div class="welcome-slides" id="welcomeSlides">
         <section class="welcome-slide active">
