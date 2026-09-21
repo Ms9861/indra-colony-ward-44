@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Jan Seva Yojana | Ward No. 44 | Indra Colony, Pali</title>
@@ -109,9 +111,7 @@
               <strong>Photo / Image</strong>
               <small>Take a photo with camera or choose from phone gallery.</small>
               <div class="media-buttons">
-                <label class="choose camera-btn">📷 Take Photo
-                  <input id="imageCameraInput" type="file" accept="image/*" capture="environment" hidden>
-                </label>
+                <button id="openPhotoCamera" type="button" class="choose camera-btn">📷 Take Photo</button>
                 <label class="choose">🖼 Upload Photo
                   <input id="imageInput" type="file" accept="image/*" multiple hidden>
                 </label>
@@ -123,9 +123,7 @@
               <strong>Video</strong>
               <small>Record a video with camera or choose one from your phone.</small>
               <div class="media-buttons">
-                <label class="choose camera-btn">🎥 Record Video
-                  <input id="videoCameraInput" type="file" accept="video/*" capture="environment" hidden>
-                </label>
+                <button id="openVideoCamera" type="button" class="choose camera-btn">🎥 Record Video</button>
                 <label class="choose">🎬 Upload Video
                   <input id="videoInput" type="file" accept="video/*" hidden>
                 </label>
@@ -133,7 +131,7 @@
               <span id="videoName" class="file-name">No video selected</span>
             </div>
           </div>
-          <div class="media-note">On mobile, the camera buttons open the device camera. Upload buttons open your existing photos/videos. Media is compressed and uploaded to your Google Drive after the complaint is registered. Videos should be 8 MB or smaller.</div>
+          <div class="media-note">Camera mode uses a low-memory in-page camera (photo up to 1280px; video 640×480 at a low bitrate). Gallery uploads are also supported. Media is uploaded to your Google Drive after the complaint is registered.</div>
 
           <div id="mediaPreview" class="media-preview"></div>
           <div id="mediaUploadStatus" class="media-upload-status" aria-live="polite"></div>
@@ -241,6 +239,47 @@
     <span>Citizen Issue Registration Portal</span>
     <a class="admin-link" href="dashboard.html">Parishad Dashboard ↗</a>
   </footer>
+
+  <div id="welcomeModal" class="welcome-modal hidden" aria-hidden="true">
+    <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+      <button id="closeWelcome" class="welcome-close" type="button" aria-label="Close">✕</button>
+      <div class="welcome-badge">WARD 44 · JAN SEVA PORTAL</div>
+      <div class="welcome-icon">🤝</div>
+      <div class="welcome-slides" id="welcomeSlides">
+        <section class="welcome-slide active">
+          <div class="welcome-kicker">WELCOME TO</div>
+          <h2 id="welcomeTitle">Ward 44 Citizen Service Portal</h2>
+          <p>Indra Colony, Pali — आपकी समस्या, हमारी जिम्मेदारी.</p>
+        </section>
+        <section class="welcome-slide">
+          <div class="welcome-kicker">RAISE AN ISSUE</div>
+          <h2>Report it in a few simple steps</h2>
+          <p>Describe the problem, add GPS, and attach a photo or short video when useful.</p>
+        </section>
+        <section class="welcome-slide">
+          <div class="welcome-kicker">TRACK & FOLLOW UP</div>
+          <h2>Stay updated with your Complaint ID</h2>
+          <p>Register your issue and use the Complaint ID to check its latest status.</p>
+        </section>
+      </div>
+      <div class="welcome-dots" id="welcomeDots"><span class="active"></span><span></span><span></span></div>
+      <button id="welcomeStart" class="welcome-start" type="button">Continue to Ward 44 Portal →</button>
+    </div>
+  </div>
+
+  <div id="cameraModal" class="camera-modal hidden" aria-hidden="true">
+    <div class="camera-dialog">
+      <div class="camera-head"><strong id="cameraTitle">Camera</strong><button id="closeCamera" type="button" aria-label="Close">✕</button></div>
+      <video id="cameraPreview" autoplay muted playsinline></video>
+      <canvas id="cameraCanvas" class="hidden"></canvas>
+      <div id="cameraHint" class="camera-hint">Allow camera access when your browser asks.</div>
+      <div class="camera-controls">
+        <button id="takePhotoBtn" type="button" class="camera-action hidden">📷 Capture Photo</button>
+        <button id="startVideoBtn" type="button" class="camera-action hidden">● Start Video</button>
+        <button id="stopVideoBtn" type="button" class="camera-action danger hidden">■ Stop Video</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
