@@ -1,4 +1,4 @@
-const API_URL='https://script.google.com/macros/s/AKfycbyQO1G0LfSmf0BOMYXuzLJ6Ipaf1cA3x-6OE4xiOUmBvdJwi9OnJsR_wbadsr7nzpVqSQ/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbxUuayaDo61nzwn7sTeInhw20XnCbXlvVKfwMZqZZNzwfH9RwAAGGU5AlA0iyjUuf61ig/exec';
 const ADMIN_PIN='2580'; // Must match ADMIN_PIN in your Apps Script.
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -31,7 +31,11 @@ async function load(){
     const id=esc(c.complaintId||'');
     const statusClass=c.status==='Solved'?'solved':c.status==='In Progress'?'progress':'registered';
     const map=c.latitude&&c.longitude?`<a class="map" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open GPS location ↗</a>`:'';
-    return `<article class="dash-item"><div><div class="complaint-id">${id}</div><h4>${esc(c.category)}</h4><p><b>Resident:</b> ${esc(c.name)} · ${esc(c.mobile)}<br><b>Location:</b> ${esc(c.location)}<br><b>Registered:</b> ${fmt(c.registeredAt)}<br><b>Problem:</b> ${esc(c.description)}</p><div class="dash-meta">${map}${c.latitude&&c.longitude?' · GPS captured':''}</div></div><div class="status-control"><span class="badge ${statusClass}">${esc(c.status)}</span><select onchange="changeStatus('${id}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select></div></article>`;
+    const photos=c.photoLinks?c.photoLinks.split(/\n+/).filter(Boolean).map((u,i)=>`<a class="map" target="_blank" href="${esc(u)}">📷 Photo ${i+1} ↗</a>`).join(' · '):'';
+    const videos=c.videoLinks?c.videoLinks.split(/\n+/).filter(Boolean).map((u,i)=>`<a class="map" target="_blank" href="${esc(u)}">🎥 Video ${i+1} ↗</a>`).join(' · '):'';
+    const media=(photos||videos)?`<div class="dash-media">${photos}${photos&&videos?' · ':''}${videos}</div>`:'';
+    const folder=c.driveFolder?`<a class="map" target="_blank" href="${esc(c.driveFolder)}">📁 Drive Folder ↗</a>`:'';
+    return `<article class="dash-item"><div><div class="complaint-id">${id}</div><h4>${esc(c.category)}</h4><p><b>Resident:</b> ${esc(c.name)} · ${esc(c.mobile)}<br><b>Location:</b> ${esc(c.location)}<br><b>Registered:</b> ${fmt(c.registeredAt)}<br><b>Problem:</b> ${esc(c.description)}</p><div class="dash-meta">${map}${c.latitude&&c.longitude?' · GPS captured':''}</div>${media}${folder?`<div class="dash-meta">${folder}</div>`:''}</div><div class="status-control"><span class="badge ${statusClass}">${esc(c.status)}</span><select onchange="changeStatus('${id}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select></div></article>`;
   }).join(''):'<div class="result">No complaints found for this filter.</div>';
 }
 
