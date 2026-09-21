@@ -6,13 +6,14 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const fmt = t => t ? new Date(t).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'}) : '—';
 
-async function apiPost(body){
+async function apiPost(body, options={}){
+  const timeoutMs = options.timeoutMs || (body && body.action === 'media' ? 60000 : 15000);
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const r = await fetch(API_URL, {
       method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify(body), signal:controller.signal
+      body:JSON.stringify(body), signal:controller.signal, cache:'no-store'
     });
     const text = await r.text();
     let data; try { data = JSON.parse(text); } catch { throw new Error('Google Sheets backend returned an invalid response.'); }
@@ -164,21 +165,62 @@ async function uploadMedia(complaintId){
   for(const f of imageFiles) files.push(await compressImage(f));
   if(videoFile) files.push(videoFile);
   if(!files.length) return {count:0};
-  const maxVideo=6*1024*1024;
-  if(videoFile && videoFile.size>maxVideo) throw new Error('Video is larger than 6 MB. Please record a shorter video or choose a smaller video.');
+
+  const maxClient=6*1024*1024;
+  if(videoFile && videoFile.size>maxClient) throw new Error('Video is larger than 6 MB. Please record a shorter video or choose a smaller video.');
+
+  const uploadKey=window.__ward44UploadKey || '';
+  if(!uploadKey) throw new Error('Media authorization was not received. Please try submitting the complaint again.');
+
   const uploaded=[];
   for(let i=0;i<files.length;i++){
     const f=files[i];
-    if(f.size>6*1024*1024) throw new Error(`${f.name} is larger than 6 MB.`);
+    if(f.size>maxClient) throw new Error(`${f.name} is larger than 6 MB.`);
     const status=$('mediaUploadStatus');
     if(status) status.textContent=`Uploading media ${i+1} of ${files.length}…`;
+
     const dataUrl=await fileToDataUrl(f);
-    if(!window.__ward44UploadKey) throw new Error('Media authorization was not received. Please try submitting the complaint again.');
-    await apiPost({action:'media',complaintId,uploadKey:window.__ward44UploadKey,files:[{name:f.name,mime:f.type,base64:dataUrl.split(',')[1]}]});
+    const payload={action:'media',complaintId,uploadKey,files:[{name:f.name,mime:f.type,base64:dataUrl.split(',')[1]}]};
+    let lastError=null;
+    for(let attempt=1;attempt<=3;attempt++){
+      try{
+        await apiPost(payload,{timeoutMs:60000});
+        lastError=null;
+        break;
+      }catch(err){
+        lastError=err;
+        if(attempt<3){
+          if(status) status.textContent=`Media upload retry ${attempt}…`;
+          await new Promise(r=>setTimeout(r,1200*attempt));
+        }
+      }
+    }
+    if(lastError) throw lastError;
     uploaded.push(f.name);
   }
-  if($('mediaUploadStatus')) $('mediaUploadStatus').textContent=`${uploaded.length} media file(s) saved to Google Drive.`;
+  if($('mediaUploadStatus')) $('mediaUploadStatus').textContent=`✓ ${uploaded.length} media file(s) saved to Google Drive.`;
   return {count:uploaded.length};
+}
+
+async function retryPendingMedia(){
+  const complaintId=window.__ward44ComplaintId || $('newId')?.textContent.trim();
+  if(!complaintId || !window.__ward44UploadKey){
+    if($('mediaUploadStatus')) $('mediaUploadStatus').textContent='Media authorization is no longer available. Please submit a new complaint.';
+    return;
+  }
+  const btn=$('retryMediaBtn');
+  if(btn){btn.disabled=true;btn.textContent='Retrying media…';}
+  try{
+    const result=await uploadMedia(complaintId);
+    if($('successBox')?.querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
+    if(btn) btn.classList.add('hidden');
+    return result;
+  }catch(err){
+    console.error(err);
+    if($('mediaUploadStatus')) $('mediaUploadStatus').textContent='Media upload failed again. Keep this page open and try Retry Media Upload once more.';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='↻ Retry Media Upload';}
+  }
 }
 
 function captureGPS(){
@@ -218,27 +260,34 @@ $('complaintForm').addEventListener('submit', async e => {
     // This keeps the registration response fast even when media is large.
     const result = await apiPost(payload);
     window.__ward44UploadKey = result.uploadKey || '';
+    window.__ward44ComplaintId = result.complaintId || '';
 
     $('newId').textContent = result.complaintId;
     $('successBox').classList.remove('hidden');
     e.target.classList.add('hidden');
-    if($('mediaUploadStatus')) $('mediaUploadStatus').textContent = (imageFiles.length || videoFile) ? 'Complaint registered. Media is uploading securely to Google Drive in the background…' : '';
+    if($('mediaUploadStatus')) $('mediaUploadStatus').textContent = (imageFiles.length || videoFile) ? 'Complaint registered. Saving your photo/video to Google Drive…' : '';
 
-    // Upload media AFTER the complaint is already registered. The citizen gets
-    // the complaint ID immediately instead of waiting for Drive uploads.
     const mediaCount = imageFiles.length + (videoFile ? 1 : 0);
+    let mediaSaved=true;
     if(mediaCount){
-      uploadMedia(result.complaintId).then(mediaResult=>{
+      // IMPORTANT: keep the submit flow alive until Google Drive confirms the upload.
+      // The old background .then() approach could be suspended when the browser opened
+      // WhatsApp or when the user left the page, leaving the complaint without media.
+      if($('retryMediaBtn')) $('retryMediaBtn').classList.add('hidden');
+      try{
+        await uploadMedia(result.complaintId);
         if($('successBox').querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
-      }).catch(err=>{
+      }catch(err){
+        mediaSaved=false;
         console.error(err);
-        if($('mediaUploadStatus')) $('mediaUploadStatus').textContent='Complaint is registered. Media upload could not be completed; you can submit the media again from the complaint.';
-      });
+        if($('mediaUploadStatus')) $('mediaUploadStatus').textContent='Complaint is registered, but the photo/video could not be saved. Please keep this page open and tap Retry Media Upload.';
+        if($('retryMediaBtn')) $('retryMediaBtn').classList.remove('hidden');
+      }
     }
     renderRecent();
     window.scrollTo({top:$('register').offsetTop-20, behavior:'smooth'});
     if(!WARD_WHATSAPP.includes('X')){
-      const text = ['JAN SEVA YOJANA - WARD NO. 44','New Citizen Issue','Complaint ID: '+result.complaintId,'Parishad: Moinuddin Shaikh','Resident: '+payload.name,'Mobile: '+payload.mobile,'Location: '+payload.location,'Category: '+payload.category,'Problem: '+payload.description,'GPS: '+(payload.latitude&&payload.longitude?payload.latitude+', '+payload.longitude:'Not captured'),'Status: Registered','Your Problem will solve Within 3 to 7 Days.'].join('\n');
+      const text = ['JAN SEVA YOJANA - WARD NO. 44','New Citizen Issue','Complaint ID: '+result.complaintId,'Parishad: Moinuddin','Resident: '+payload.name,'Mobile: '+payload.mobile,'Location: '+payload.location,'Category: '+payload.category,'Problem: '+payload.description,'GPS: '+(payload.latitude&&payload.longitude?payload.latitude+', '+payload.longitude:'Not captured'),'Status: Registered',mediaSaved?'Media: Saved to Google Drive':'Media: Upload failed - retry from portal','Your Problem will solve Within 3 to 7 Days.'].join('\n');
       window.open(`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent(text)}`,'_blank');
     }
   } catch(err) {
@@ -247,18 +296,22 @@ $('complaintForm').addEventListener('submit', async e => {
   } finally { btn.disabled=false; btn.textContent=oldText; }
 });
 
+$('retryMediaBtn')?.addEventListener('click',retryPendingMedia);
+
 $('newComplaint')?.addEventListener('click',()=>{
   $('successBox').classList.add('hidden'); $('complaintForm').classList.remove('hidden'); $('complaintForm').reset();
   imageFiles=[]; videoFile=null; showFiles();
   if($('gpsStatus')) $('gpsStatus').textContent='Location not captured';
   if($('gpsMapLink')) $('gpsMapLink').classList.add('hidden');
+  window.__ward44ComplaintId=''; window.__ward44UploadKey='';
+  if($('retryMediaBtn')) $('retryMediaBtn').classList.add('hidden');
   window.scrollTo({top:$('register').offsetTop-20,behavior:'smooth'});
 });
 
 $('waChat')?.addEventListener('click',e=>{
   e.preventDefault();
   if(WARD_WHATSAPP.includes('X')) { alert('Please set the Ward WhatsApp number in app.js first.'); return; }
-  window.open(`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent('Hello Moinuddin Shaikh, I want to register an issue for Ward No. 44, Indra Colony, Pali.')}`,'_blank');
+  window.open(`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent('Hello Moinuddin, I want to register an issue for Ward No. 44, Indra Colony, Pali.')}`,'_blank');
 });
 
 $('trackBtn')?.addEventListener('click', async()=>{
