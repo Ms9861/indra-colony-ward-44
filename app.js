@@ -48,9 +48,83 @@ function setVideoFile(file){
   showFiles();
 }
 $('imageInput')?.addEventListener('change', e => setImageFiles(e.target.files));
-$('imageCameraInput')?.addEventListener('change', e => setImageFiles(e.target.files));
 $('videoInput')?.addEventListener('change', e => setVideoFile(e.target.files[0]));
-$('videoCameraInput')?.addEventListener('change', e => setVideoFile(e.target.files[0]));
+
+let cameraStream=null, cameraMode=null, recorder=null, recordedChunks=[], videoStopTimer=null;
+
+function stopCameraStream(){
+  if(videoStopTimer) clearTimeout(videoStopTimer);
+  videoStopTimer=null;
+  if(recorder && recorder.state!=='inactive') { try{ recorder.stop(); }catch(_){} }
+  recorder=null;
+  if(cameraStream){ cameraStream.getTracks().forEach(t=>t.stop()); cameraStream=null; }
+  const v=$('cameraPreview'); if(v) v.srcObject=null;
+}
+function closeCamera(){
+  stopCameraStream();
+  const m=$('cameraModal'); if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true');}
+}
+async function openCamera(mode){
+  cameraMode=mode;
+  const modal=$('cameraModal'), title=$('cameraTitle'), hint=$('cameraHint'), photoBtn=$('takePhotoBtn'), startBtn=$('startVideoBtn'), stopBtn=$('stopVideoBtn'), preview=$('cameraPreview');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ alert('Your browser does not support in-page camera access. Please use Upload instead.'); return; }
+  stopCameraStream();
+  title.textContent=mode==='photo'?'Take Photo':'Record Video';
+  photoBtn.classList.toggle('hidden',mode!=='photo'); startBtn.classList.toggle('hidden',mode!=='video'); stopBtn.classList.add('hidden');
+  hint.textContent=mode==='photo'?'Low-memory photo mode • maximum 1280px.':'Low-memory video mode • 640×480 • maximum 10 seconds.';
+  modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false');
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:640,max:1280},height:{ideal:480,max:720},frameRate:{ideal:15,max:20}},audio:mode==='video'});
+    preview.srcObject=cameraStream;
+  }catch(err){
+    closeCamera();
+    alert('Camera permission was denied or the camera is unavailable. Please allow camera access and try again, or use Upload.');
+  }
+}
+function capturePhoto(){
+  const v=$('cameraPreview'), canvas=$('cameraCanvas');
+  if(!v.videoWidth) return;
+  const max=1280, scale=Math.min(1,max/Math.max(v.videoWidth,v.videoHeight));
+  canvas.width=Math.max(1,Math.round(v.videoWidth*scale)); canvas.height=Math.max(1,Math.round(v.videoHeight*scale));
+  const ctx=canvas.getContext('2d',{alpha:false}); ctx.drawImage(v,0,0,canvas.width,canvas.height);
+  canvas.toBlob(blob=>{
+    if(!blob){alert('Could not capture the photo.');return;}
+    setImageFiles([new File([blob],'camera-photo.jpg',{type:'image/jpeg'})]);
+    closeCamera();
+  },'image/jpeg',0.72);
+}
+function startVideoRecording(){
+  if(!cameraStream) return;
+  const mime=['video/webm;codecs=vp8,opus','video/webm'].find(x=>MediaRecorder.isTypeSupported(x)) || '';
+  try{
+    recorder=new MediaRecorder(cameraStream,{mimeType:mime,videoBitsPerSecond:450000,audioBitsPerSecond:32000});
+  }catch(err){
+    try{ recorder=new MediaRecorder(cameraStream); }catch(_){ alert('Video recording is not supported by this browser. Please use Upload Video.'); return; }
+  }
+  recordedChunks=[];
+  recorder.ondataavailable=e=>{if(e.data&&e.data.size) recordedChunks.push(e.data);};
+  recorder.onstop=()=>{
+    const type=recorder?.mimeType || mime || 'video/webm';
+    const blob=new Blob(recordedChunks,{type});
+    if(blob.size>6*1024*1024){ alert('The recorded video is too large. Please record a shorter video.'); return; }
+    const ext=type.includes('mp4')?'mp4':'webm';
+    setVideoFile(new File([blob],`camera-video.${ext}`,{type}));
+    stopCameraStream();
+    const modal=$('cameraModal'); if(modal){modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');}
+  };
+  recorder.start(1000);
+  $('startVideoBtn').classList.add('hidden'); $('stopVideoBtn').classList.remove('hidden');
+  $('cameraHint').textContent='Recording… tap Stop Video when finished (maximum 10 seconds).';
+  videoStopTimer=setTimeout(()=>{if(recorder && recorder.state==='recording') recorder.stop();},10000);
+}
+function stopVideoRecording(){ if(recorder && recorder.state==='recording') recorder.stop(); }
+$('openPhotoCamera')?.addEventListener('click',()=>openCamera('photo'));
+$('openVideoCamera')?.addEventListener('click',()=>openCamera('video'));
+$('takePhotoBtn')?.addEventListener('click',capturePhoto);
+$('startVideoBtn')?.addEventListener('click',startVideoRecording);
+$('stopVideoBtn')?.addEventListener('click',stopVideoRecording);
+$('closeCamera')?.addEventListener('click',closeCamera);
+$('cameraModal')?.addEventListener('click',e=>{if(e.target.id==='cameraModal') closeCamera();});
 
 function fileToDataUrl(file){
   return new Promise((resolve,reject)=>{
@@ -91,7 +165,7 @@ async function uploadMedia(complaintId){
   if(videoFile) files.push(videoFile);
   if(!files.length) return {count:0};
   const maxVideo=6*1024*1024;
-  if(videoFile && videoFile.size>maxVideo) throw new Error('Video is larger than 8 MB. Please record a shorter video or choose a smaller video.');
+  if(videoFile && videoFile.size>maxVideo) throw new Error('Video is larger than 6 MB. Please record a shorter video or choose a smaller video.');
   const uploaded=[];
   for(let i=0;i<files.length;i++){
     const f=files[i];
@@ -140,18 +214,27 @@ $('complaintForm').addEventListener('submit', async e => {
     latitude:fd.get('latitude') || '', longitude:fd.get('longitude') || '', gpsAccuracy:fd.get('gpsAccuracy') || ''
   };
   try {
+    // Register the complaint first. Do NOT wait for photo/video processing here.
+    // This keeps the registration response fast even when media is large.
     const result = await apiPost(payload);
-    // The backend returns a one-time media authorization key with the complaint.
-    // Set it BEFORE uploading any photo/video.
     window.__ward44UploadKey = result.uploadKey || '';
-    let mediaResult={count:0};
-    if(imageFiles.length || videoFile){
-      mediaResult=await uploadMedia(result.complaintId);
-    }
+
     $('newId').textContent = result.complaintId;
     $('successBox').classList.remove('hidden');
-    if(mediaResult.count && $('successBox').querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
     e.target.classList.add('hidden');
+    if($('mediaUploadStatus')) $('mediaUploadStatus').textContent = (imageFiles.length || videoFile) ? 'Complaint registered. Media is uploading securely to Google Drive in the background…' : '';
+
+    // Upload media AFTER the complaint is already registered. The citizen gets
+    // the complaint ID immediately instead of waiting for Drive uploads.
+    const mediaCount = imageFiles.length + (videoFile ? 1 : 0);
+    if(mediaCount){
+      uploadMedia(result.complaintId).then(mediaResult=>{
+        if($('successBox').querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
+      }).catch(err=>{
+        console.error(err);
+        if($('mediaUploadStatus')) $('mediaUploadStatus').textContent='Complaint is registered. Media upload could not be completed; you can submit the media again from the complaint.';
+      });
+    }
     renderRecent();
     window.scrollTo({top:$('register').offsetTop-20, behavior:'smooth'});
     if(!WARD_WHATSAPP.includes('X')){
@@ -204,4 +287,24 @@ async function renderRecent(){
   }catch(err){ console.error(err); box.innerHTML='<div class="recent-item"><small>Recent complaints are temporarily unavailable.</small></div>'; }
 }
 $('viewAll')?.addEventListener('click',renderRecent);
-renderRecent();
+const scheduleIdle = window.requestIdleCallback || (cb => setTimeout(cb, 700));
+scheduleIdle(renderRecent);
+
+// Lightweight welcome slideshow. It shows once per browser session and does not
+// block the portal after the user starts using it.
+(function initWelcome(){
+  const modal=$('welcomeModal');
+  if(!modal) return;
+  const slides=[...modal.querySelectorAll('.welcome-slide')];
+  const dots=[...modal.querySelectorAll('.welcome-dots span')];
+  const close=()=>{modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');try{sessionStorage.setItem('ward44WelcomeSeen','1')}catch(_){} };
+  let index=0, timer;
+  const show=i=>{index=(i+slides.length)%slides.length;slides.forEach((x,n)=>x.classList.toggle('active',n===index));dots.forEach((x,n)=>x.classList.toggle('active',n===index));};
+  const startAuto=()=>{clearInterval(timer);timer=setInterval(()=>show(index+1),4200);};
+  $('closeWelcome')?.addEventListener('click',close);
+  $('welcomeStart')?.addEventListener('click',close);
+  dots.forEach((d,i)=>d.addEventListener('click',()=>{show(i);startAuto();}));
+  modal.addEventListener('click',e=>{if(e.target===modal)close();});
+  let seen=false;try{seen=sessionStorage.getItem('ward44WelcomeSeen')==='1'}catch(_){}
+  if(!seen){setTimeout(()=>{modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');startAuto();},350);}
+})();
