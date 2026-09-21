@@ -90,15 +90,16 @@ async function uploadMedia(complaintId){
   for(const f of imageFiles) files.push(await compressImage(f));
   if(videoFile) files.push(videoFile);
   if(!files.length) return {count:0};
-  const maxVideo=8*1024*1024;
+  const maxVideo=6*1024*1024;
   if(videoFile && videoFile.size>maxVideo) throw new Error('Video is larger than 8 MB. Please record a shorter video or choose a smaller video.');
   const uploaded=[];
   for(let i=0;i<files.length;i++){
     const f=files[i];
-    if(f.size>8*1024*1024) throw new Error(`${f.name} is larger than 8 MB.`);
+    if(f.size>6*1024*1024) throw new Error(`${f.name} is larger than 6 MB.`);
     const status=$('mediaUploadStatus');
     if(status) status.textContent=`Uploading media ${i+1} of ${files.length}…`;
     const dataUrl=await fileToDataUrl(f);
+    if(!window.__ward44UploadKey) throw new Error('Media authorization was not received. Please try submitting the complaint again.');
     await apiPost({action:'media',complaintId,uploadKey:window.__ward44UploadKey,files:[{name:f.name,mime:f.type,base64:dataUrl.split(',')[1]}]});
     uploaded.push(f.name);
   }
@@ -140,11 +141,13 @@ $('complaintForm').addEventListener('submit', async e => {
   };
   try {
     const result = await apiPost(payload);
+    // The backend returns a one-time media authorization key with the complaint.
+    // Set it BEFORE uploading any photo/video.
+    window.__ward44UploadKey = result.uploadKey || '';
     let mediaResult={count:0};
     if(imageFiles.length || videoFile){
       mediaResult=await uploadMedia(result.complaintId);
     }
-    window.__ward44UploadKey = result.uploadKey || '';
     $('newId').textContent = result.complaintId;
     $('successBox').classList.remove('hidden');
     if(mediaResult.count && $('successBox').querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
