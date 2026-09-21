@@ -30,3 +30,20 @@ footer{background:#075544;color:#fff;padding:18px 5%;display:flex;justify-conten
 .media-actions{align-items:stretch}.media-box{min-height:145px}.media-buttons{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.media-buttons .choose{cursor:pointer;text-align:center}.camera-btn{background:#e5f5ee;border-color:#b7d9ca;color:#075544}.media-note{font-size:8px;color:#748680;line-height:1.45;margin:-3px 0 10px;padding:7px 9px;background:#f6faf8;border-radius:6px;border:1px solid #e2ece8}@media(max-width:720px){.media-actions{grid-template-columns:1fr}.media-box{min-height:130px}.media-buttons .choose{flex:1}}
 .media-upload-status{margin:8px 0;font-size:10px;color:#16734e;font-weight:700;min-height:14px}
 .dash-media{margin-top:8px;font-size:10px;line-height:1.8}.dash-media a,.dash-meta a{font-weight:800}
+
+.camera-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:grid;place-items:center;padding:16px}.camera-dialog{width:min(520px,100%);background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}.camera-head{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line);color:var(--deep)}.camera-head button{border:0;background:#f1f5f3;border-radius:50%;width:32px;height:32px}.camera-dialog video{display:block;width:100%;aspect-ratio:4/3;background:#111;object-fit:cover}.camera-hint{padding:9px 13px;font-size:10px;color:#6e827c;background:#f7faf9}.camera-controls{display:flex;gap:8px;padding:12px}.camera-action{flex:1;border:0;border-radius:7px;background:var(--green);color:#fff;padding:11px;font-weight:800;font-size:11px}.camera-action.danger{background:#c74635}.media-buttons button{cursor:pointer;font:inherit}
+
+/* Welcome experience */
+.welcome-modal{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:18px;background:rgba(2,37,29,.72);backdrop-filter:blur(5px)}
+.welcome-modal.hidden{display:none!important}
+.welcome-card{width:min(560px,100%);position:relative;overflow:hidden;border:1px solid #d6ebe4;border-radius:20px;background:linear-gradient(145deg,#ffffff 0%,#f4fbf8 100%);box-shadow:0 28px 90px rgba(0,0,0,.28);padding:30px 28px 24px;text-align:center;animation:welcomeIn .45s ease both}
+@keyframes welcomeIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.welcome-close{position:absolute;right:14px;top:14px;width:34px;height:34px;border:0;border-radius:50%;background:#edf5f2;color:#42645c;font-weight:800}
+.welcome-badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#e4f4ee;color:#087b58;font-size:9px;font-weight:800;letter-spacing:1.2px}
+.welcome-icon{width:68px;height:68px;margin:16px auto 10px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#087b58,#14a374);font-size:31px;box-shadow:0 10px 25px #087b5828}
+.welcome-slides{min-height:155px;display:grid;place-items:center}.welcome-slide{display:none;max-width:430px}.welcome-slide.active{display:block;animation:slideIn .35s ease both}@keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.welcome-kicker{font-size:10px;font-weight:800;letter-spacing:2px;color:#ff7418}.welcome-slide h2{margin:7px 0 8px;font-size:28px;line-height:1.12;color:#075544}.welcome-slide p{margin:0;color:#627a73;font-size:12px;line-height:1.65}.welcome-dots{display:flex;justify-content:center;gap:7px;margin:8px 0 17px}.welcome-dots span{width:7px;height:7px;border-radius:50%;background:#cbdcd6;transition:.2s}.welcome-dots span.active{width:22px;border-radius:99px;background:#087b58}.welcome-start{width:100%;border:0;border-radius:9px;padding:12px 16px;background:linear-gradient(90deg,#087b58,#0a9168);color:#fff;font-size:11px;font-weight:800;box-shadow:0 8px 20px #087b5825}
+@media(max-width:520px){.welcome-card{padding:25px 18px 19px;border-radius:16px}.welcome-slide h2{font-size:23px}.welcome-slides{min-height:175px}}
+
+/* Faster-feeling registration state */
+.submit-btn{transition:transform .15s ease,opacity .15s ease}.submit-btn:disabled{opacity:.72;cursor:wait;transform:none}.media-upload-status{min-height:14px}
