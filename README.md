@@ -1,45 +1,48 @@
-# Ward 44 Jan Seva Yojana 
+# Ward 44 
 
-This build restores the earlier Ward 44 public portal visual design while keeping the Google Apps Script + Google Sheets backend.
+This version keeps the previous Ward 44 public UI and adds Google Drive media storage.
 
-## Files
-- `index.html` — public portal
-- `dashboard.html` — separate Parishad dashboard with PIN login
-- `app.js` — public portal logic + Google Sheets API connection
-- `dashboard.js` — Parishad dashboard logic + status updates
-- `style.css` — previous UI styling
-- `assets/inc-hand-logo.png` — portal logo
+## Architecture
+- Public portal: `index.html`
+- Separate Parishad dashboard: `dashboard.html`
+- Frontend: GitHub + Vercel
+- Data: Google Sheets through Google Apps Script
+- Photos/videos: Google Drive through the same Apps Script
+- No Supabase
 
-## Google Apps Script
-The current Apps Script URL is already configured in `app.js` and `dashboard.js`.
-
-The dashboard PIN in this build is `2580`. It must match the `ADMIN_PIN` in Apps Script.
-
-## Media
-Image/video selectors remain in the previous UI for the design, but media backup is intentionally not sent to Google Drive yet. The selected files are only previewed in the browser until a future storage plan is added.
-
-## Deploy
-Upload the contents of this folder to GitHub. Vercel can import the GitHub repository and deploy the static site.
-
-
-## GPS + Recent Complaints update
-
-This version enables a visible **Use My Current Location** button on the public complaint form. GPS requires browser location permission and HTTPS (Vercel provides HTTPS). Coordinates are stored in the Google Sheet and shown as a Google Maps link in tracking/dashboard.
-
-It also enables **Recent Complaints** on the public portal. The Apps Script backend must be updated to the included `Code.gs`, because the public `recent` endpoint is new.
-
-### Update Apps Script
-1. Open the Apps Script project connected to the `Ward 44 Complaints` Sheet.
-2. Replace the existing `Code.gs` with the included `Code.gs`.
-3. Keep your chosen `ADMIN_PIN` if you changed it.
+## Google Drive setup
+1. Open the Google Sheet **Ward 44 Complaints**.
+2. Open **Extensions → Apps Script**.
+3. Replace the existing `Code.gs` with the `Code.gs` in this ZIP.
 4. Save.
-5. Deploy → Manage deployments → edit the existing Web app deployment → create a new version → Deploy.
-6. Keep **Execute as: Me** and **Who has access: Anyone**.
-7. Keep the same `/exec` URL if Apps Script offers it.
+5. Deploy → **Manage deployments** → edit the existing Web App → create a **new version**.
+6. Keep **Execute as: Me**.
+7. Keep **Who has access: Anyone**.
+8. Authorize Google Drive access when Google asks. This is your Google account; do not share your password.
+9. Keep the same `/exec` URL. The website is already configured with the user's existing Apps Script URL.
 
-### Test
-- Open the Vercel site over HTTPS.
-- Click **Use My Current Location** and allow location permission.
-- Submit a test complaint.
-- Confirm Latitude/Longitude/GPS Accuracy appear in the `Complaints` sheet.
-- Confirm the Recent Complaints card shows the new complaint (only ID, category, location, status and time are public).
+## Drive organization
+The script automatically creates:
+`Ward 44 Complaints Media / W44-YYYY-0001 / Photos` and `Videos`.
+
+The Google Sheet automatically adds:
+- Photo Links
+- Video Links
+- Drive Folder
+- Media Key (authorization value used internally for that complaint)
+
+Existing 14-column sheets are upgraded automatically when the Apps Script runs.
+
+## Media behavior
+- Photos are resized/compressed in the browser before upload.
+- Up to 4 photos can be selected.
+- Video uploads are limited to 8 MB by the website to reduce phone memory and Apps Script payload problems.
+- Each media file is uploaded separately, instead of sending all files in one large request.
+- Drive links are saved in the complaint row.
+- Dashboard shows links to the saved photos/videos and the complaint Drive folder.
+- Files are set to **Anyone with the link → Viewer** so the Parishad dashboard can open them without Google login. This means the link itself should be treated as shareable; the Drive folder is not publicly searchable/listed.
+
+## Important
+Google Drive free storage is limited by the storage available on the Google account. Videos consume that storage faster than photos.
+
+For very large videos or high-volume production use, a later version should use a more scalable direct upload architecture rather than sending large base64 payloads through Apps Script.
