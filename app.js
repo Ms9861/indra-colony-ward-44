@@ -243,10 +243,51 @@ function captureGPS(){
 }
 $('getGps')?.addEventListener('click', captureGPS);
 
+function buildWhatsAppMessage(result, payload, mediaSaved='pending'){
+  return [
+    'JAN SEVA YOJANA - WARD NO. 44',
+    'New Citizen Issue',
+    'Complaint ID: '+result.complaintId,
+    'Parishad: Moinuddin',
+    'Resident: '+payload.name,
+    'Mobile: '+payload.mobile,
+    'Location: '+payload.location,
+    'Category: '+payload.category,
+    'Problem: '+payload.description,
+    'GPS: '+(payload.latitude&&payload.longitude?payload.latitude+', '+payload.longitude:'Not captured'),
+    'Status: Registered',
+    mediaSaved==='saved'?'Media: Saved to Google Drive':mediaSaved==='failed'?'Media: Upload failed - retry from portal':'Media: Uploading to Google Drive',
+    'Your Problem will solve Within 3 to 7 Days.'
+  ].join('\n');
+}
+
+function openWhatsAppDirect(url, preOpenedWindow){
+  // The blank window is opened from the original submit click, so browsers are
+  // much less likely to block it. We then navigate it immediately after the
+  // complaint ID is returned, before the slower media upload starts.
+  if(preOpenedWindow && !preOpenedWindow.closed){
+    try { preOpenedWindow.location.href=url; return true; } catch(_) {}
+  }
+  try {
+    window.location.href = url;
+    return true;
+  } catch(_) {
+    return false;
+  }
+}
+
 $('complaintForm').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = e.submitter || $('submitBtn');
   const oldText = btn.textContent;
+
+  // Open a blank tab immediately from the user's click. This prevents the
+  // browser popup blocker from stopping WhatsApp after the async API call.
+  let waWindow = null;
+  if(!WARD_WHATSAPP.includes('X')){
+    try { waWindow = window.open('about:blank','_blank'); } catch(_) { waWindow=null; }
+  }
+
   btn.disabled = true; btn.textContent = 'Registering…';
   if($('mediaUploadStatus')) $('mediaUploadStatus').textContent='';
   const fd = new FormData(e.target);
@@ -256,8 +297,7 @@ $('complaintForm').addEventListener('submit', async e => {
     latitude:fd.get('latitude') || '', longitude:fd.get('longitude') || '', gpsAccuracy:fd.get('gpsAccuracy') || ''
   };
   try {
-    // Register the complaint first. Do NOT wait for photo/video processing here.
-    // This keeps the registration response fast even when media is large.
+    // Register first so the complaint number is available as soon as possible.
     const result = await apiPost(payload);
     window.__ward44UploadKey = result.uploadKey || '';
     window.__ward44ComplaintId = result.complaintId || '';
@@ -265,14 +305,22 @@ $('complaintForm').addEventListener('submit', async e => {
     $('newId').textContent = result.complaintId;
     $('successBox').classList.remove('hidden');
     e.target.classList.add('hidden');
+
+    // IMPORTANT: WhatsApp opens immediately after the complaint ID is created.
+    // It does NOT wait for photo/video upload.
+    if(!WARD_WHATSAPP.includes('X')){
+      const text = buildWhatsAppMessage(result, payload, 'pending');
+      const waUrl = `https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent(text)}`;
+      openWhatsAppDirect(waUrl, waWindow);
+    } else if(waWindow && !waWindow.closed){
+      try{ waWindow.close(); }catch(_){}
+    }
+
     if($('mediaUploadStatus')) $('mediaUploadStatus').textContent = (imageFiles.length || videoFile) ? 'Complaint registered. Saving your photo/video to Google Drive…' : '';
 
     const mediaCount = imageFiles.length + (videoFile ? 1 : 0);
     let mediaSaved=true;
     if(mediaCount){
-      // IMPORTANT: keep the submit flow alive until Google Drive confirms the upload.
-      // The old background .then() approach could be suspended when the browser opened
-      // WhatsApp or when the user left the page, leaving the complaint without media.
       if($('retryMediaBtn')) $('retryMediaBtn').classList.add('hidden');
       try{
         await uploadMedia(result.complaintId);
@@ -284,19 +332,29 @@ $('complaintForm').addEventListener('submit', async e => {
         if($('retryMediaBtn')) $('retryMediaBtn').classList.remove('hidden');
       }
     }
+
     renderRecent();
     window.scrollTo({top:$('register').offsetTop-20, behavior:'smooth'});
-    if(!WARD_WHATSAPP.includes('X')){
-      const text = ['JAN SEVA YOJANA - WARD NO. 44','New Citizen Issue','Complaint ID: '+result.complaintId,'Parishad: Moinuddin','Resident: '+payload.name,'Mobile: '+payload.mobile,'Location: '+payload.location,'Category: '+payload.category,'Problem: '+payload.description,'GPS: '+(payload.latitude&&payload.longitude?payload.latitude+', '+payload.longitude:'Not captured'),'Status: Registered',mediaSaved?'Media: Saved to Google Drive':'Media: Upload failed - retry from portal','Your Problem will solve Within 3 to 7 Days.'].join('\n');
-      window.open(`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent(text)}`,'_blank');
-    }
   } catch(err) {
+    if(waWindow && !waWindow.closed){ try{ waWindow.close(); }catch(_){} }
     console.error(err);
     alert(err.name === 'AbortError' ? 'The server took too long to respond. Please try again.' : (err.message || 'Complaint could not be registered. Please try again.'));
   } finally { btn.disabled=false; btn.textContent=oldText; }
 });
 
 $('retryMediaBtn')?.addEventListener('click',retryPendingMedia);
+
+$('sendComplaintWhatsApp')?.addEventListener('click',()=>{
+  const complaintId=$('newId')?.textContent.trim();
+  if(!complaintId) return;
+  if(WARD_WHATSAPP.includes('X')){
+    alert('Please set the Ward WhatsApp number in app.js first.');
+    return;
+  }
+  const text=`JAN SEVA YOJANA - WARD NO. 44\nComplaint ID: ${complaintId}\nParishad: Moinuddin\nYour complaint has been registered successfully.\nYour Problem will solve Within 3 to 7 Days.`;
+  const url=`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent(text)}`;
+  window.open(url,'_blank');
+});
 
 $('newComplaint')?.addEventListener('click',()=>{
   $('successBox').classList.add('hidden'); $('complaintForm').classList.remove('hidden'); $('complaintForm').reset();
