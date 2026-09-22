@@ -1,5 +1,5 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbxUuayaDo61nzwn7sTeInhw20XnCbXlvVKfwMZqZZNzwfH9RwAAGGU5AlA0iyjUuf61ig/exec';
-const WARD_WHATSAPP = '917240610313'; // Replace with the Ward Parishad WhatsApp number.
+const WARD_WHATSAPP = '917737155269'; // Replace with the Ward Parishad WhatsApp number.
 let imageFiles = [], videoFile = null;
 
 const $ = id => document.getElementById(id);
