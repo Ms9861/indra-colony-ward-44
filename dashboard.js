@@ -63,7 +63,20 @@ async function login(){
 $('loginBtn').onclick=login;
 $('loginPin').onkeydown=e=>{if(e.key==='Enter')login()};
 $('loginOtp').onkeydown=e=>{if(e.key==='Enter')login()};
-$('logoutBtn').onclick=e=>{e.preventDefault();sessionStorage.removeItem('ward44_login');sessionStorage.removeItem('ward44_auth_token');location.reload()};
+$('logoutBtn').onclick=e=>{
+  e.preventDefault();
+  sessionStorage.removeItem('ward44_login');
+  sessionStorage.removeItem('ward44_auth_token');
+  sessionStorage.setItem('ward44_logout_message','1');
+  location.reload();
+};
+
+if(sessionStorage.getItem('ward44_logout_message')==='1'){
+  const msg=$('logoutMessage');
+  if(msg) msg.classList.remove('hidden');
+  sessionStorage.removeItem('ward44_logout_message');
+}
+
 
 document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));
