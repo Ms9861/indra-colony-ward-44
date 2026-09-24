@@ -282,8 +282,7 @@ function buildWhatsAppMessage(result, payload, mediaSaved='pending'){
     'GPS: '+(payload.latitude&&payload.longitude?payload.latitude+', '+payload.longitude:'Not captured'),
     'Status: Registered',
     mediaSaved==='saved'?'Media: Saved to Google Drive':mediaSaved==='failed'?'Media: Upload failed - retry from portal':'Media: Uploading to Google Drive',
-    'Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
-आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।'
+    'Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.\nआपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।'
   ].join('\n');
 }
 
@@ -377,8 +376,7 @@ $('sendComplaintWhatsApp')?.addEventListener('click',()=>{
     alert('Please set the Ward WhatsApp number in app.js first.');
     return;
   }
-  const text=`JAN SEVA YOJANA - WARD NO. 44\nComplaint ID: ${complaintId}\nParshad: Moinuddin\nYour complaint has been registered successfully.\nYour problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
-आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।`;
+  const text=`JAN SEVA YOJANA - WARD NO. 44\nComplaint ID: ${complaintId}\nParshad: Moinuddin\nYour complaint has been registered successfully.\nYour problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.\nआपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।`;
   const url=`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent(text)}`;
   window.open(url,'_blank');
 });
@@ -406,8 +404,7 @@ $('trackBtn')?.addEventListener('click', async()=>{
   try{
     const j=await apiGet({action:'track',id});
     const c=j.complaint;
-    box.innerHTML=`<div class="result"><b>${esc(c.complaintId)}</b> · ${esc(c.category)}<br>${esc(c.location)}<br>Status: <strong>${esc(c.status)}</strong><br>Registered: ${fmt(c.registeredAt)}${c.latitude&&c.longitude?`<br><a class="map" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open GPS location ↗</a>`:''}<br><br>Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
-आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।</div>`;
+    box.innerHTML=`<div class="result"><b>${esc(c.complaintId)}</b> · ${esc(c.category)}<br>${esc(c.location)}<br>Status: <strong>${esc(c.status)}</strong><br>Registered: ${fmt(c.registeredAt)}${c.latitude&&c.longitude?`<br><a class="map" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open GPS location ↗</a>`:''}<br><br>Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.\nआपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।</div>`;
   }catch(err){ console.error(err); box.innerHTML='<div class="result">Unable to check status right now. Please try again.</div>'; }
 });
 
