@@ -98,3 +98,23 @@ footer{background:#075544;color:#fff;padding:18px 5%;display:flex;justify-conten
 @media(max-width:600px){.media-view-card{width:140px}.media-viewer{padding:8px}.viewer-video{height:60vh}.media-viewer-body{min-height:180px}}
 
 .success-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.wa-success-btn{border:0;background:#08a05a;color:#fff;border-radius:6px;padding:7px 9px;font-size:9px;font-weight:800;cursor:pointer}.retry-media-btn{border:1px solid #c8dbd5;background:#fff;color:#23675a;border-radius:6px;padding:7px 9px;font-size:9px;font-weight:800;cursor:pointer}.wa-success-btn:hover{background:#07884c}.retry-media-btn:hover{background:#f1f8f5}
+
+/* Mobile Parshad logout visibility */
+@media(max-width:720px){
+  .dashboard-page .site-header{position:sticky;top:0;z-index:60;}
+  .dashboard-page .nav{display:flex;align-items:center;gap:6px;margin-left:auto;}
+  .dashboard-page .nav a{display:inline-flex;align-items:center;gap:4px;padding:7px 8px;border:1px solid #d4dfdb;border-radius:7px;background:#fff;font-size:10px;white-space:nowrap;}
+  .dashboard-page .nav a.active{display:none;}
+  .dashboard-page .nav .logout-link{color:#075e54;border-bottom:1px solid #d4dfdb;}
+  .dashboard-page .nav .logout-link span{display:inline;}
+  .dashboard-page .brand-title .main-title{font-size:15px;}
+  .dashboard-page .sub-title{font-size:8px;}
+  .dashboard-page .logo{width:40px;height:40px;}
+}
+@media(max-width:380px){
+  .dashboard-page .brand-wrap{gap:7px;}
+  .dashboard-page .brand-title .main-title{font-size:13px;}
+  .dashboard-page .sub-title{font-size:7px;}
+  .dashboard-page .logo{width:34px;height:34px;}
+  .dashboard-page .nav .logout-link{padding:6px 7px;}
+}
