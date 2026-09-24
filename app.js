@@ -1,5 +1,5 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbxUuayaDo61nzwn7sTeInhw20XnCbXlvVKfwMZqZZNzwfH9RwAAGGU5AlA0iyjUuf61ig/exec';
-const WARD_WHATSAPP = '917737155269'; // Replace with the Ward Parishad WhatsApp number.
+const WARD_WHATSAPP = '917240610313'; // Replace with the Ward Parshad WhatsApp number.
 let imageFiles = [], videoFile = null;
 
 const $ = id => document.getElementById(id);
@@ -75,11 +75,22 @@ async function openCamera(mode){
   hint.textContent=mode==='photo'?'Low-memory photo mode • maximum 1280px.':'Low-memory video mode • 640×480 • maximum 10 seconds.';
   modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false');
   try{
-    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:640,max:1280},height:{ideal:480,max:720},frameRate:{ideal:15,max:20}},audio:mode==='video'});
+    const videoConstraints={facingMode:{ideal:'environment'},width:{ideal:640,max:1280},height:{ideal:480,max:720},frameRate:{ideal:15,max:20}};
+    // Video capture should still work when microphone permission is denied.
+    // First try camera + microphone, then fall back to camera-only.
+    try{
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:mode==='video'});
+    }catch(firstErr){
+      if(mode!=='video') throw firstErr;
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:false});
+    }
     preview.srcObject=cameraStream;
+    await preview.play().catch(()=>{});
   }catch(err){
     closeCamera();
-    alert('Camera permission was denied or the camera is unavailable. Please allow camera access and try again, or use Upload.');
+    alert(mode==='video'
+      ? 'Video camera could not be started. Please allow camera access, or use “Upload Video” to choose/record a video from your phone.'
+      : 'Camera permission was denied or the camera is unavailable. Please allow camera access and try again, or use Upload.');
   }
 }
 function capturePhoto(){
@@ -95,25 +106,39 @@ function capturePhoto(){
   },'image/jpeg',0.72);
 }
 function startVideoRecording(){
-  if(!cameraStream) return;
-  const mime=['video/webm;codecs=vp8,opus','video/webm'].find(x=>MediaRecorder.isTypeSupported(x)) || '';
+  if(!cameraStream || !window.MediaRecorder){
+    alert('Video recording is not supported in this browser. Please use “Upload Video” and choose/record a video from your phone.');
+    return;
+  }
+  const candidates=[
+    'video/mp4;codecs=h264,aac',
+    'video/mp4;codecs=h264',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp8',
+    'video/webm'
+  ];
+  const mime=candidates.find(x=>MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x)) || '';
   try{
-    recorder=new MediaRecorder(cameraStream,{mimeType:mime,videoBitsPerSecond:450000,audioBitsPerSecond:32000});
+    recorder=mime
+      ? new MediaRecorder(cameraStream,{mimeType:mime,videoBitsPerSecond:420000,audioBitsPerSecond:32000})
+      : new MediaRecorder(cameraStream);
   }catch(err){
-    try{ recorder=new MediaRecorder(cameraStream); }catch(_){ alert('Video recording is not supported by this browser. Please use Upload Video.'); return; }
+    alert('Video recording is not supported in this browser. Please use “Upload Video”.');
+    return;
   }
   recordedChunks=[];
   recorder.ondataavailable=e=>{if(e.data&&e.data.size) recordedChunks.push(e.data);};
+  recorder.onerror=()=>{ alert('Video recording failed. Please try “Upload Video”.'); };
   recorder.onstop=()=>{
     const type=recorder?.mimeType || mime || 'video/webm';
     const blob=new Blob(recordedChunks,{type});
     if(blob.size>6*1024*1024){ alert('The recorded video is too large. Please record a shorter video.'); return; }
     const ext=type.includes('mp4')?'mp4':'webm';
-    setVideoFile(new File([blob],`camera-video.${ext}`,{type}));
+    setVideoFile(new File([blob],`camera-video.${ext}`,{type:type.split(';')[0]||'video/webm'}));
     stopCameraStream();
     const modal=$('cameraModal'); if(modal){modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');}
   };
-  recorder.start(1000);
+  try{ recorder.start(1000); }catch(err){ alert('Could not start video recording. Please use “Upload Video”.'); return; }
   $('startVideoBtn').classList.add('hidden'); $('stopVideoBtn').classList.remove('hidden');
   $('cameraHint').textContent='Recording… tap Stop Video when finished (maximum 10 seconds).';
   videoStopTimer=setTimeout(()=>{if(recorder && recorder.state==='recording') recorder.stop();},10000);
@@ -212,7 +237,7 @@ async function retryPendingMedia(){
   if(btn){btn.disabled=true;btn.textContent='Retrying media…';}
   try{
     const result=await uploadMedia(complaintId);
-    if($('successBox')?.querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
+    if($('successBox')?.querySelector('p')) $('successBox').querySelector('p').textContent='Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month. Media has been saved to Google Drive. आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।';
     if(btn) btn.classList.add('hidden');
     return result;
   }catch(err){
@@ -248,7 +273,7 @@ function buildWhatsAppMessage(result, payload, mediaSaved='pending'){
     'JAN SEVA YOJANA - WARD NO. 44',
     'New Citizen Issue',
     'Complaint ID: '+result.complaintId,
-    'Parishad: Moinuddin',
+    'Parshad: Moinuddin',
     'Resident: '+payload.name,
     'Mobile: '+payload.mobile,
     'Location: '+payload.location,
@@ -257,7 +282,8 @@ function buildWhatsAppMessage(result, payload, mediaSaved='pending'){
     'GPS: '+(payload.latitude&&payload.longitude?payload.latitude+', '+payload.longitude:'Not captured'),
     'Status: Registered',
     mediaSaved==='saved'?'Media: Saved to Google Drive':mediaSaved==='failed'?'Media: Upload failed - retry from portal':'Media: Uploading to Google Drive',
-    'Your Problem will solve Within 3 to 7 Days.'
+    'Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
+आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।'
   ].join('\n');
 }
 
@@ -324,7 +350,7 @@ $('complaintForm').addEventListener('submit', async e => {
       if($('retryMediaBtn')) $('retryMediaBtn').classList.add('hidden');
       try{
         await uploadMedia(result.complaintId);
-        if($('successBox').querySelector('p')) $('successBox').querySelector('p').textContent='Your Problem will solve Within 3 to 7 Days. Media has been saved to Google Drive.';
+        if($('successBox').querySelector('p')) $('successBox').querySelector('p').textContent='Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month. Media has been saved to Google Drive. आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।';
       }catch(err){
         mediaSaved=false;
         console.error(err);
@@ -351,7 +377,8 @@ $('sendComplaintWhatsApp')?.addEventListener('click',()=>{
     alert('Please set the Ward WhatsApp number in app.js first.');
     return;
   }
-  const text=`JAN SEVA YOJANA - WARD NO. 44\nComplaint ID: ${complaintId}\nParishad: Moinuddin\nYour complaint has been registered successfully.\nYour Problem will solve Within 3 to 7 Days.`;
+  const text=`JAN SEVA YOJANA - WARD NO. 44\nComplaint ID: ${complaintId}\nParshad: Moinuddin\nYour complaint has been registered successfully.\nYour problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
+आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।`;
   const url=`https://wa.me/${WARD_WHATSAPP}?text=${encodeURIComponent(text)}`;
   window.open(url,'_blank');
 });
@@ -379,7 +406,8 @@ $('trackBtn')?.addEventListener('click', async()=>{
   try{
     const j=await apiGet({action:'track',id});
     const c=j.complaint;
-    box.innerHTML=`<div class="result"><b>${esc(c.complaintId)}</b> · ${esc(c.category)}<br>${esc(c.location)}<br>Status: <strong>${esc(c.status)}</strong><br>Registered: ${fmt(c.registeredAt)}${c.latitude&&c.longitude?`<br><a class="map" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open GPS location ↗</a>`:''}<br><br>Your Problem will solve Within 3 to 7 Days.</div>`;
+    box.innerHTML=`<div class="result"><b>${esc(c.complaintId)}</b> · ${esc(c.category)}<br>${esc(c.location)}<br>Status: <strong>${esc(c.status)}</strong><br>Registered: ${fmt(c.registeredAt)}${c.latitude&&c.longitude?`<br><a class="map" target="_blank" href="https://www.google.com/maps?q=${encodeURIComponent(c.latitude+','+c.longitude)}">Open GPS location ↗</a>`:''}<br><br>Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
+आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।</div>`;
   }catch(err){ console.error(err); box.innerHTML='<div class="result">Unable to check status right now. Please try again.</div>'; }
 });
 
