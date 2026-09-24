@@ -5,11 +5,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Jan Seva Portal | Ward No. 44 | Indra Colony, Pali</title>
+  <title>Jan Seva Yojana | Ward No. 44 | Indra Colony, Pali</title>
   <meta name="description" content="Citizen issue registration and complaint tracking portal for Ward No. 44, Indra Colony, Pali.">
     <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="inc-favicon.png">
-  <link rel="apple-touch-icon" href="inc-favicon.png">
+  <link rel="apple-touch-icon" href="assets/inc-favicon.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,9 +18,9 @@
       <img class="logo" src="inc-hand-logo.png" alt="INC hand symbol">
       <div class="brand-title">
         <div class="main-title">INDRA COLONY, PALI</div>
-        <div class="sub-title">Ward No. 44 <span>|</span> Jan Seva Portal</div>
+        <div class="sub-title">Ward No. 44 <span>|</span> Jan Seva Yojana</div>
       </div>
-      <div class="parishad-head">
+      <div class="parshad-head">
         <small>Ward Parshad</small>
         <strong>MOINUDDIN</strong>
         <span>Indian National Congress (INC)</span>
@@ -39,7 +39,7 @@
       <div class="hero-left">
         <img src="moinuddin.png" alt="" class="hero-logo">
         <div>
-          <div class="hero-kicker">JAN SEVA PORTAL</div>
+          <div class="hero-kicker">JAN SEVA YOJANA</div>
           <h1>INDRA COLONY, PALI</h1>
           <h2>Ward No. 44 <span>|</span> Citizen Issue Portal</h2>
           <div class="hero-rule"></div>
@@ -62,7 +62,7 @@
           <div class="head-icon">✎</div>
           <div>
             <h2>Register Your Issue</h2>
-            <p>Fill the form and submit your complaint to Ward Parishad.</p>
+            <p>Fill the form and submit your complaint to Ward Parshad.</p>
           </div>
         </div>
 
@@ -128,7 +128,7 @@
               <div class="media-buttons">
                 <button id="openVideoCamera" type="button" class="choose camera-btn">🎥 Record Video</button>
                 <label class="choose">🎬 Upload Video
-                  <input id="videoInput" type="file" accept="video/*" hidden>
+                  <input id="videoInput" type="file" accept="video/*" capture="environment" hidden>
                 </label>
               </div>
               <span id="videoName" class="file-name">No video selected</span>
@@ -146,8 +146,13 @@
           <div class="success-icon">✓</div>
           <div>
             <strong>Complaint Registered Successfully</strong>
-            <p>Your Problem will solve Within 3 to 7 Days.</p>
-            <small>Complaint ID: <b id="newId"></b></small><button id="retryMediaBtn" type="button" class="retry-media-btn hidden">↻ Retry Media Upload</button>
+            <p>Your problem will be resolved within 3 to 7 days. If additional time is required, it may take up to 1 month.
+आपकी समस्या 3 से 7 दिनों के भीतर हल करने का हमारा प्रयास रहेगा। विशेष परिस्थिति में समाधान में अधिकतम 1 माह तक लग सकता है।</p>
+            <small>Complaint ID: <b id="newId"></b></small>
+            <div class="success-actions">
+              <button id="sendComplaintWhatsApp" type="button" class="wa-success-btn">◉ Send Complaint No. on WhatsApp</button>
+              <button id="retryMediaBtn" type="button" class="retry-media-btn hidden">↻ Retry Media Upload</button>
+            </div>
           </div>
         </div>
       </div>
@@ -180,7 +185,7 @@
               <small>Status is updated for the resident</small>
             </div>
           </div>
-          <div class="promise"><span>◷</span><div><b>Your Problem will solve</b><strong>Within 3 to 7 Days.</strong></div></div>
+          <div class="promise"><span>◷</span><div><b>Your Problem will be Solved</b><strong>Within 3 to 7 Days.</strong><small>In special circumstances, resolution may take up to 1 month.<br>विशेष परिस्थितियों में समाधान में अधिकतम 1 माह तक लग सकता है।</small></div></div>
         </div>
 
         <div class="card track-card" id="track">
@@ -210,13 +215,13 @@
           <div class="wa-icon">◉</div>
           <div>
             <h3>Get Instant Update on WhatsApp</h3>
-            <p>After registration, complaint details can be shared with the Ward Parishad on WhatsApp.</p>
+            <p>After registration, complaint details can be shared with the Ward Parshad on WhatsApp.</p>
           </div>
           <button id="waChat" class="wa-btn">◉ &nbsp; Chat on WhatsApp <span>›</span></button>
-          <small class="wa-help">Configure the Ward WhatsApp number in <code>app.js</code>.</small>
+          <small class="wa-help">WhatsApp opens immediately after registration with the Complaint ID and issue details pre-filled.</small>
         </div>
 
-        <div class="card parishad-card">
+        <div class="card parshad-card">
           <img src="inc-hand-logo.png" alt="INC hand symbol">
           <div>
             <small>Ward Parshad</small>
@@ -238,9 +243,8 @@
   </main>
 
   <footer>
-    <div><img src="inc-hand-logo.png" alt=""> <span><b>Jan Seva Portal</b><small>Ward No. 44 · Indra Colony, Pali</small></span></div>
+    <div><img src="inc-hand-logo.png" alt=""> <span><b>Jan Seva Yojana</b><small>Ward No. 44 · Indra Colony, Pali</small></span></div>
     <span>Citizen Issue Registration Portal</span>
-    <a class="admin-link" href="dashboard.html">Parshad Dashboard ↗</a>
   </footer>
 
   <div id="welcomeModal" class="welcome-modal hidden" aria-hidden="true">
