@@ -1,5 +1,7 @@
 const API_URL='https://script.google.com/macros/s/AKfycbxUuayaDo61nzwn7sTeInhw20XnCbXlvVKfwMZqZZNzwfH9RwAAGGU5AlA0iyjUuf61ig/exec';
 const ADMIN_PIN='2580';
+let ADMIN_AUTH_TOKEN=sessionStorage.getItem('ward44_auth_token')||'';
+let ADMIN_OTP='';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const fmt=t=>t?new Date(t).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
@@ -7,7 +9,9 @@ let filter='All';
 let complaints=[];
 
 async function request(body){
-  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+  const payload={...body};
+  if(ADMIN_AUTH_TOKEN) payload.authToken=ADMIN_AUTH_TOKEN;
+  const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
   const text=await r.text();
   let j; try{j=JSON.parse(text)}catch{throw new Error('Invalid response from Google Apps Script')}
   if(!j.ok) throw new Error(j.message||'Request failed');
@@ -36,17 +40,30 @@ async function loadMediaFromTrack(){
   });
 }
 
-function login(){
-  if($('loginPin').value===ADMIN_PIN){
+async function login(){
+  const pin=$('loginPin').value.trim();
+  const otp=$('loginOtp').value.trim().replace(/\D/g,'');
+  const err=$('loginError');
+  err.textContent='';
+  if(pin!==ADMIN_PIN){err.textContent='Incorrect Parshad PIN.';return;}
+  if(!/^\d{6}$/.test(otp)){err.textContent='Enter the 6-digit code from your Authenticator app.';return;}
+  $('loginBtn').disabled=true; $('loginBtn').textContent='Verifying…';
+  try{
+    const r=await request({action:'auth',pin,otp});
+    ADMIN_AUTH_TOKEN=r.authToken||'';
+    ADMIN_OTP=otp;
+    sessionStorage.setItem('ward44_auth_token',ADMIN_AUTH_TOKEN);
     sessionStorage.setItem('ward44_login','1');
     $('loginOverlay').classList.add('hidden');
     $('dashboardContent').classList.remove('hidden');
     load();
-  } else $('loginError').textContent='Incorrect PIN. Please try again.';
+  }catch(e){err.textContent=e.message||'Authentication failed. Check your PIN and Authenticator code.';}
+  finally{$('loginBtn').disabled=false;$('loginBtn').textContent='Sign In →';}
 }
 $('loginBtn').onclick=login;
 $('loginPin').onkeydown=e=>{if(e.key==='Enter')login()};
-$('logoutBtn').onclick=e=>{e.preventDefault();sessionStorage.removeItem('ward44_login');location.reload()};
+$('loginOtp').onkeydown=e=>{if(e.key==='Enter')login()};
+$('logoutBtn').onclick=e=>{e.preventDefault();sessionStorage.removeItem('ward44_login');sessionStorage.removeItem('ward44_auth_token');location.reload()};
 
 document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));
@@ -116,7 +133,7 @@ function card(c){
       <div class="media-container">${mediaBlock(c)}</div>
       ${folder?`<div class="dash-meta">${folder}</div>`:''}
     </div>
-    <div class="status-control"><span class="badge ${statusClass}">${esc(c.status)}</span><select onchange="changeStatus('${id}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select></div>
+    <div class="status-control"><span class="badge ${statusClass}">${esc(c.status)}</span><select onchange="changeStatus('${id}',this.value)"><option ${c.status==='Registered'?'selected':''}>Registered</option><option ${c.status==='In Progress'?'selected':''}>In Progress</option><option ${c.status==='Solved'?'selected':''}>Solved</option></select>${c.status==='Solved'?`<button class="notify-solved-btn" type="button" onclick="notifySolved(complaints.find(x=>String(x.complaintId)===String('${id}')))">✓ Send WhatsApp Confirmation</button>`:''}</div>
   </article>`;
 }
 function render(){
@@ -132,16 +149,72 @@ async function load(){
   $('refreshBtn').disabled=true;
   list.innerHTML='<div class="loading-note">Loading complaints…</div>';
   try{
-    const j=await request({action:'list',pin:ADMIN_PIN});
+    const j=await request({action:'list'});
     complaints=j.complaints||[];
     await loadMediaFromTrack();
     render();
-  }catch(e){list.innerHTML='<div class="result">Unable to load complaints. Check that your Apps Script deployment is active and the Parishad PIN is correct.</div>';}
+  }catch(e){list.innerHTML='<div class="result">Unable to load complaints. Check that your Apps Script deployment is active and the Parshad PIN is correct.</div>';}
   finally{$('refreshBtn').disabled=false;}
 }
+function cleanWhatsAppNumber(mobile){
+  let n=String(mobile||'').replace(/\D/g,'');
+  if(n.length===10) n='91'+n;
+  if(n.startsWith('0') && n.length===11) n='91'+n.slice(1);
+  return n;
+}
+function solvedWhatsAppUrl(c){
+  const phone=cleanWhatsAppNumber(c.mobile);
+  const message=[
+    'WARD PARSHAD - WARD 44',
+    '',
+    `Your complaint ${c.complaintId} has been marked as SOLVED.`,
+    '',
+    `Resident: ${c.name||''}`,
+    `Problem: ${c.category||'Complaint'}`,
+    '',
+    'Thank you for using the Ward 44 Citizen Service Portal.',
+    'Parshad: Moinuddin'
+  ].join('\n');
+  return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : '';
+}
+function notifySolved(c){
+  const url=solvedWhatsAppUrl(c);
+  if(!url){ alert('The resident mobile number is missing or invalid, so WhatsApp confirmation cannot be prepared.'); return; }
+  const w=window.open(url,'_blank','noopener,noreferrer');
+  if(!w) alert('WhatsApp could not be opened automatically. Please allow pop-ups for the Parshad dashboard.');
+}
+window.notifySolved=notifySolved;
 window.changeStatus=async(id,status)=>{
-  try{await request({action:'status',complaintId:id,status,pin:ADMIN_PIN});const c=complaints.find(x=>String(x.complaintId)===String(id));if(c){c.status=status;c.updatedAt=new Date().toISOString();if(status==='Solved')c.solvedAt=c.updatedAt;}render();}
-  catch(e){alert(e.message||'Status could not be updated.');}
+  let whatsappWindow=null;
+  const cBefore=complaints.find(x=>String(x.complaintId)===String(id));
+  if(status==='Solved' && cBefore){
+    // Open a user-initiated tab immediately so browser popup blockers are less likely to block WhatsApp.
+    whatsappWindow=window.open('about:blank','_blank');
+  }
+  try{
+    await request({action:'status',complaintId:id,status});
+    const c=complaints.find(x=>String(x.complaintId)===String(id));
+    if(c){
+      c.status=status; c.updatedAt=new Date().toISOString();
+      if(status==='Solved') c.solvedAt=c.updatedAt;
+      render();
+      if(status==='Solved' && c){
+        const url=solvedWhatsAppUrl(c);
+        if(url){
+          if(whatsappWindow && !whatsappWindow.closed) whatsappWindow.location.href=url;
+          else notifySolved(c);
+        }else if(whatsappWindow && !whatsappWindow.closed){
+          whatsappWindow.close();
+          alert('The resident mobile number is missing or invalid, so WhatsApp confirmation could not be prepared.');
+        }
+      }else if(whatsappWindow && !whatsappWindow.closed){
+        whatsappWindow.close();
+      }
+    }
+  }catch(e){
+    if(whatsappWindow && !whatsappWindow.closed) whatsappWindow.close();
+    alert(e.message||'Status could not be updated.');
+  }
 };
 function ensureMediaViewer(){
   if($('mediaViewer')) return;
@@ -171,6 +244,6 @@ window.closeMediaViewer=(e)=>{
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')window.closeMediaViewer();});
 
-if(sessionStorage.getItem('ward44_login')==='1'){
+if(sessionStorage.getItem('ward44_login')==='1' && sessionStorage.getItem('ward44_auth_token')){
   $('loginOverlay').classList.add('hidden');$('dashboardContent').classList.remove('hidden');load();
 }
